@@ -1,0 +1,25 @@
+<div id=<%= dom_id(message) %> class="row small-margin">
+  <div class="max">
+    <% if message.creator.present? || message.creator_id&.zero? %>
+      <p class="bold primary-text"><%= message.creator.try(:name) || message.creator.try(:email) || "User" %> <small class="secondary-text"><%= message.created_at.strftime('%l:%M %p') %></small></p>
+    <% else %>
+      <p class="bold accent-text">System <small class="secondary-text"><%= message.created_at.strftime('%l:%M %p') %></small></p>
+    <% end %>
+    <p><%= simple_format(message.body) %></p>
+  </div>
+</div>
+<script>
+  setTimeout(() => {
+    <% if local_assigns[:stream_target_id] %>
+      const targetElement = document.getElementById('<%= stream_target_id %>') || document.getElementById('<%= dom_id(message) %>');
+    <% else %>
+      const targetElement = document.getElementById('<%= dom_id(message) %>');
+    <% end %>
+    if (targetElement) {
+      const messagesDiv = targetElement.closest('[id$="_messages"]');
+      if (messagesDiv) {
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
+    }
+  }, 10);
+</script>

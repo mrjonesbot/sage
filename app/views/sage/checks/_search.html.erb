@@ -1,0 +1,8 @@
+<%= search_form_for @q, url: checks_path, class: 'field border prefix round', data: { controller: 'sage--search' } do |f| %>
+
+  <i class="front">search</i>
+  <%= f.search_field :emails_or_slack_channels_or_check_type_cont, 
+                     placeholder: "Search checks by emails, slack channels, or type...", 
+                     class: 'text',
+                     data: { action: 'input->sage--search#submit' } %>
+<% end %>

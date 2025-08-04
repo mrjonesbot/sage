@@ -1,0 +1,8 @@
+<%= search_form_for @q, url: root_path, class: 'field border prefix round', data: { controller: 'sage--search', turbo_frame: "queries" } do |f| %>
+
+  <i class="front">search</i>
+  <%= f.search_field :name_or_description_or_statement_cont, 
+                     placeholder: "Search queries by name, description or SQL...", 
+                     class: 'text',
+                     data: { action: 'input->sage--search#submit' } %>
+<% end %>

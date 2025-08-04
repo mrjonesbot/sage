@@ -1,0 +1,77 @@
+<%= turbo_frame_tag "overlay" do %>
+  <%= render layout: 'sage/shared/overlay', locals: { title: @table_display_name } do %>
+      <% if @table_info.present? %>
+        <p class="small-text grey-text"><%= @table_info[:table] %></p>
+
+        <div class="space"></div>
+
+        <h6>Columns (<%= @table_info[:columns].size %>)</h6>
+        <div class="columns-grid">
+          <% @table_info[:columns].each do |column| %>
+            <div class="row padding">
+              <div class="max">
+                <span class="column-name"><%= column[:name] %></span>
+              </div>
+              <div>
+                <span class="chip small"><%= column[:data_type].upcase %></span>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <h5>Table Not Found</h5>
+        <p>The requested table schema could not be found.</p>
+      <% end %>
+    <% end %>
+  <% end %>
+
+  <style>
+.overlay-header {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+  .overlay-header h4 {
+    margin: 0 0 5px 0;
+  }
+
+  .overlay-content {
+    padding: 20px;
+  }
+
+  .columns-grid {
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .column-row {
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .column-row:last-child {
+    border-bottom: none;
+  }
+
+  .column-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .column-name {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-weight: 500;
+    color: #0969da;
+  }
+
+  .column-type {
+    font-size: 11px;
+    color: #6c757d;
+    background: #e9ecef;
+    padding: 2px 8px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  </style>

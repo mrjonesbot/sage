@@ -1,0 +1,81 @@
+<%= form_for @check do |f| %>
+  <% unless @check.respond_to?(:check_type) || @check.respond_to?(:invert) %>
+    <p class="secondary-text">Checks are designed to identify bad data. A check fails if there are any results.</p>
+  <% end %>
+
+  <% if @check.errors.any? %>
+    <div class="error padding margin"><%= @check.errors.full_messages.first %></div>
+  <% end %>
+
+  <div class="grid">
+    <div class="s12 m6">
+      <div data-controller="sage--select" 
+           data-sage--select-options-value="<%= Blazer::Query.active.named.order(:name).select("id, name").map { |q| {text: q.name, value: q.id} }.to_json %>"
+           data-sage--select-selected-value="<%= @check.query_id %>"
+           data-sage--select-placeholder-value="Select query">
+        <div class="field label border select-container">
+          <input type="text" 
+                 data-sage--select-target="input" 
+                 data-action="input->sage--select#search focus->sage--select#focus blur->sage--select#blur"
+                 autocomplete="off"
+                 placeholder=" ">
+          <label>Search queries</label>
+          <input type="hidden" name="check[query_id]" id="check_query_id" value="<%= @check.query_id %>" data-sage--select-target="hidden">
+          <div data-sage--select-target="dropdown" class="select-dropdown hidden">
+          </div>
+        </div>
+      </div>
+
+      <% if @check.respond_to?(:check_type) %>
+        <div class="field label border">
+          <% check_options = [["Any results (bad data)", "bad_data"], ["No results (missing data)", "missing_data"]] %>
+          <% check_options << ["Anomaly (most recent data point)", "anomaly"] if Blazer.anomaly_checks %>
+          <%= f.select :check_type, check_options, {}, {class: "active"} %>
+          <label>Alert if</label>
+        </div>
+      <% elsif @check.respond_to?(:invert) %>
+        <div class="field label border">
+          <%= f.select :invert, [["Any results (bad data)", false], ["No results (missing data)", true]], {}, {class: "active"} %>
+          <label>Fails if</label>
+        </div>
+      <% end %>
+
+      <% if @check.respond_to?(:schedule) && Blazer.check_schedules %>
+        <div class="field label border">
+          <%= f.select :schedule, Blazer.check_schedules.map { |v| [v, v] }, {}, {class: "active"} %>
+          <label>Run every</label>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="s12 m6">
+      <div class="field label border">
+        <%= f.text_field :emails %>
+        <label>Emails</label>
+        <span class="helper">Optional, comma separated</span>
+      </div>
+
+      <% if Blazer.slack? %>
+        <div class="field label border">
+          <%= f.text_field :slack_channels %>
+          <label>Slack channels</label>
+          <span class="helper">Optional, comma separated</span>
+        </div>
+      <% end %>
+
+      <p class="secondary-text small-padding">
+        Emails <%= Blazer.slack? ? "and Slack notifications " : nil %>are sent when a check starts failing, and when it starts passing again.
+      </p>
+    </div>
+  </div>
+
+  <div class="medium-space"></div>
+  
+  <nav>
+    <% if @check.persisted? %>
+      <%= link_to "Delete", check_path(@check), method: :delete, "data-confirm" => "Are you sure?", class: "button error" %>
+    <% end %>
+    <button type="submit">Save</button>
+    <%= link_to "Back", :back %>
+  </nav>
+<% end %>

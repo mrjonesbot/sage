@@ -1,0 +1,14 @@
+<div id="<%= stream_target_id %>">
+  <%= simple_format(content) %>
+</div>
+<script>
+  setTimeout(() => {
+    const streamElement = document.getElementById('<%= stream_target_id %>');
+    if (streamElement) {
+      const messagesDiv = streamElement.closest('[id$="_messages"]');
+      if (messagesDiv) {
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
+    }
+  }, 10);
+</script>

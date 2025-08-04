@@ -1,0 +1,11 @@
+<dialog id='dialog' class="right" style='width: 400px;'>
+  <h5><%= local_assigns[:title] %></h5>
+  <div>
+    <%= yield %>
+  </div>
+
+  <div class="space"></div>
+  <nav class="right-align">
+    <button class="button" onclick="ui('#dialog'); document.getElementById('overlay').innerHTML = '';">Close</button>
+  </nav>
+</dialog>

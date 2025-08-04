@@ -14,59 +14,295 @@
  *= require_self
  */
 
-/* Sage Navigation */
-.sage-wrapper {
-  min-height: 100vh;
-  background-color: #f8f9fa;
-}
-
-.sage-nav {
-  background-color: #2c3e50;
-  padding: 1rem 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.sage-brand {
-  color: white;
-  font-size: 1.5rem;
-  font-weight: bold;
-  text-decoration: none;
-}
-
-.sage-nav-link {
-  color: #ecf0f1;
-  text-decoration: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-}
-
-.sage-nav-link:hover {
-  background-color: rgba(255,255,255,0.1);
-}
-
-.sage-content {
-  padding: 2rem;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .sage-container {
-    padding: 10px;
+/* select container */
+  .select-container {
+    position: relative;
   }
   
-  .sage-nav {
-    padding: 1rem;
+  .select-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--surface-container);
+    border: 1px solid var(--outline);
+    border-radius: var(--small);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: var(--elevation-2);
+    margin-top: 4px;
   }
   
-  .button-group {
-    flex-direction: column;
+  .select-dropdown.hidden {
+    display: none;
   }
   
-  .button-group .btn {
-    width: 100%;
+  .select-dropdown.visible {
+    display: block;
   }
+  
+  .select-option {
+    padding: 12px 16px;
+    cursor: pointer;
+    color: var(--on-surface);
+    transition: background-color 0.2s;
+  }
+  
+  .select-option:hover,
+  .select-option.active {
+    background-color: var(--surface-container-high);
+  }
+  
+  .select-option.no-results {
+    color: var(--on-surface-variant);
+    cursor: default;
+  }
+  
+  .select-option.no-results:hover {
+    background-color: transparent;
+  }
+
+
+/* blazer/github.css */
+.hljs {
+    display: block;
+      color: #333;
+    }
+
+    .hljs-comment,
+    .hljs-template_comment,
+    .diff .hljs-header,
+    .hljs-javadoc {
+        color: #998;
+          font-style: italic
+        }
+
+        .hljs-keyword,
+        .css .rule .hljs-keyword,
+        .hljs-winutils,
+        .javascript .hljs-title,
+        .nginx .hljs-title,
+        .hljs-subst,
+        .hljs-request,
+        .hljs-status {
+            color: #333;
+              font-weight: bold
+            }
+
+            .hljs-number,
+            .hljs-hexcolor,
+            .ruby .hljs-constant {
+                color: #099;
+              }
+
+              .hljs-string,
+              .hljs-tag .hljs-value,
+              .hljs-phpdoc,
+              .tex .hljs-formula {
+                  color: #d14
+                }
+
+                .hljs-title,
+                .hljs-id,
+                .coffeescript .hljs-params,
+                .scss .hljs-preprocessor {
+                    color: #900;
+                      font-weight: bold
+                    }
+
+                    .javascript .hljs-title,
+                    .lisp .hljs-title,
+                    .clojure .hljs-title,
+                    .hljs-subst {
+                        font-weight: normal
+                      }
+
+                      .hljs-class .hljs-title,
+                      .haskell .hljs-type,
+                      .vhdl .hljs-literal,
+                      .tex .hljs-command {
+                          color: #458;
+                            font-weight: bold
+                          }
+
+                          .hljs-tag,
+                          .hljs-tag .hljs-title,
+                          .hljs-rules .hljs-property,
+                          .django .hljs-tag .hljs-keyword {
+                              color: #000080;
+                                font-weight: normal
+                              }
+
+                              .hljs-attribute,
+                              .lisp .hljs-body {
+                                  color: #008080
+                                }
+
+                                .hljs-variable,
+                                .hljs-regexp {
+                                    color: #009926;
+                                      font-weight: bold
+                                    }
+
+                                    .hljs-symbol,
+                                    .ruby .hljs-symbol .hljs-string,
+                                    .lisp .hljs-keyword,
+                                    .tex .hljs-special,
+                                    .hljs-prompt {
+                                        color: #990073
+                                      }
+
+                                      .hljs-built_in,
+                                      .lisp .hljs-title,
+                                      .clojure .hljs-built_in {
+                                          color: #0086b3
+                                        }
+
+                                        .hljs-preprocessor,
+                                        .hljs-pragma,
+                                        .hljs-pi,
+                                        .hljs-doctype,
+                                        .hljs-shebang,
+                                        .hljs-cdata {
+                                            color: #999;
+                                              font-weight: bold
+                                            }
+
+                                            .hljs-deletion {
+                                                background: #fdd
+                                              }
+
+                                              .hljs-addition {
+                                                  background: #dfd
+                                                }
+
+                                                .diff .hljs-change {
+                                                    background: #0086b3
+                                                  }
+
+                                                  .hljs-chunk {
+                                                      color: #aaa
+                                                    }
+
+/* Dark mode styles for syntax highlighting */
+body.dark .hljs {
+    display: block;
+    color: #e6e6e6;
 }
+
+body.dark .hljs-comment,
+body.dark .hljs-template_comment,
+body.dark .diff .hljs-header,
+body.dark .hljs-javadoc {
+    color: #8b8b8b;
+    font-style: italic;
+}
+
+body.dark .hljs-keyword,
+body.dark .css .rule .hljs-keyword,
+body.dark .hljs-winutils,
+body.dark .javascript .hljs-title,
+body.dark .nginx .hljs-title,
+body.dark .hljs-subst,
+body.dark .hljs-request,
+body.dark .hljs-status {
+    color: #e6e6e6;
+    font-weight: bold;
+}
+
+body.dark .hljs-number,
+body.dark .hljs-hexcolor,
+body.dark .ruby .hljs-constant {
+    color: #6dd3ce;
+}
+
+body.dark .hljs-string,
+body.dark .hljs-tag .hljs-value,
+body.dark .hljs-phpdoc,
+body.dark .tex .hljs-formula {
+    color: #87d068;
+}
+
+body.dark .hljs-title,
+body.dark .hljs-id,
+body.dark .coffeescript .hljs-params,
+body.dark .scss .hljs-preprocessor {
+    color: #ffa657;
+    font-weight: bold;
+}
+
+body.dark .javascript .hljs-title,
+body.dark .lisp .hljs-title,
+body.dark .clojure .hljs-title,
+body.dark .hljs-subst {
+    font-weight: normal;
+}
+
+body.dark .hljs-class .hljs-title,
+body.dark .haskell .hljs-type,
+body.dark .vhdl .hljs-literal,
+body.dark .tex .hljs-command {
+    color: #61afef;
+    font-weight: bold;
+}
+
+body.dark .hljs-tag,
+body.dark .hljs-tag .hljs-title,
+body.dark .hljs-rules .hljs-property,
+body.dark .django .hljs-tag .hljs-keyword {
+    color: #e06c75;
+    font-weight: normal;
+}
+
+body.dark .hljs-attribute,
+body.dark .lisp .hljs-body {
+    color: #56b6c2;
+}
+
+body.dark .hljs-variable,
+body.dark .hljs-regexp {
+    color: #98c379;
+    font-weight: bold;
+}
+
+body.dark .hljs-symbol,
+body.dark .ruby .hljs-symbol .hljs-string,
+body.dark .lisp .hljs-keyword,
+body.dark .tex .hljs-special,
+body.dark .hljs-prompt {
+    color: #c678dd;
+}
+
+body.dark .hljs-built_in,
+body.dark .lisp .hljs-title,
+body.dark .clojure .hljs-built_in {
+    color: #61afef;
+}
+
+body.dark .hljs-preprocessor,
+body.dark .hljs-pragma,
+body.dark .hljs-pi,
+body.dark .hljs-doctype,
+body.dark .hljs-shebang,
+body.dark .hljs-cdata {
+    color: #7c7c7c;
+    font-weight: bold;
+}
+
+body.dark .hljs-deletion {
+    background: #5c2626;
+}
+
+body.dark .hljs-addition {
+    background: #2b5c2b;
+}
+
+body.dark .diff .hljs-change {
+    background: #1e4f6b;
+}
+
+body.dark .hljs-chunk {
+    color: #848484;
+}
+
