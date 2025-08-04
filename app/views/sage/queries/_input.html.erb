@@ -1,0 +1,17 @@
+<div id=<%= dom_id(query, 'input') %> class="border-top" style="padding: 16px 16px 4px 16px;">
+  <%= form_with url: query_messages_path(query), method: :post, id: 'chat-form' do |f| %>
+    <%= f.hidden_field :query_id, value: query.id %>
+    <%= f.hidden_field :data_source, value: query.data_source || Blazer.data_sources.keys.first %>
+    <div class="field textarea border round" style="margin-bottom: 1em !important;">
+      <%= f.text_area :statement, 
+        placeholder: 'How can I help?', 
+        id: 'chat-textarea',
+        class: 'transparent',
+        style: 'resize: none; padding-right: 48px; min-height: 40px;' %>
+      <button class='primary circle small' type='submit' style='position: absolute; bottom: 8px; right: 8px; z-index: 10; pointer-events: auto;'>
+        <i>send</i>
+      </button>
+    </div>
+  <% end %>
+</div>
+

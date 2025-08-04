@@ -1,0 +1,26 @@
+<nav class="m l left">
+  <header>
+    <button class="extra circle transparent">
+      Sage
+    </button>
+  </header>
+
+  <button id="theme-toggle" class='transparent circle' onclick="changeTheme()">
+    <i></i>
+  </button>
+  <%= link_to root_path, class: "#{current_page?(root_path) ? 'active' : ''}" do %>
+    <i>widgets</i>
+    <span>Queries</span>
+  <% end %>
+  <%= link_to checks_path, class: "#{current_page?(checks_path) ? 'active' : ''}" do %>
+    <i>style</i>
+    <span>Checks</span>
+  <% end %>
+  <%= link_to dashboards_path, class: "#{current_page?(dashboards_path) ? 'active' : ''}" do %>
+    <i>code</i>
+    <span>Dashboards</span>
+  <% end %>
+</nav>
+
+
+

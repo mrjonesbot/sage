@@ -1,0 +1,14 @@
+<%#= turbo_frame_tag dom_id(@query, 'message_form') do %>
+  <div style='position: absolute; bottom: 0px; left: 0; right: 0; z-index: 1000; padding: 0 20px;'>
+    <%= form_with url: "/queries/run", method: :post, local: false do |f| %>
+      <%= f.hidden_field :query_id, value: @query.id %>
+      <%= f.hidden_field :data_source, value: @query.data_source || Blazer.data_sources.keys.first %>
+      <div style='display: flex; align-items: center; gap: 12px; border: 1px solid #e0e0e0; border-radius: 24px; padding: 4px; background: white;'>
+        <%= f.text_field :statement, placeholder: 'How can I help?', style: 'flex: 1; border: none; outline: none; background: transparent; padding: 12px 16px; font-size: 16px;' %>
+        <button class='primary' type='submit' style='border: none; border-radius: 20px; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; color: white; cursor: pointer; flex-shrink: 0;'>
+          <i style='font-size: 20px;'>send</i>
+        </button>
+      </div>
+    <% end %>
+  </div>
+<%# end %>

@@ -1,0 +1,48 @@
+<% blazer_title "Edit Query" %>
+<%#= render partial: "form" %>
+
+<div class="row padding left-align">
+  <h5 class="">Edit Query</h5>
+  <%= link_to 'Back', query_path(@query) %>
+</div>
+
+<div class='grid'>
+  <div class='s12 m6 l3 border rounded' style='height: 88vh; display: flex; flex-direction: column;'>
+    <!-- Chat Messages Area -->
+    <%= turbo_stream_from "messages" %>
+    <div id=<%= dom_id(@query, 'messages') %> style='flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column;'
+         data-controller="sage--reverse-infinite-scroll" 
+         data-sage--reverse-infinite-scroll-url-value="<%= query_messages_path(@query) %>"
+         data-sage--reverse-infinite-scroll-page-value="1">
+      
+      <!-- Messages container -->
+      <div data-sage--reverse-infinite-scroll-target="entries" id="entries">
+        <%= turbo_frame_tag "messages-content", src: query_messages_path(@query), loading: :lazy do %>
+          <div class="center-align padding">
+            <small class="secondary-text">Loading messages...</small>
+          </div>
+        <% end %>
+      </div>
+    </div>
+    
+    <!-- Chat Input Form -->
+    <%= render partial: 'input', locals: { query: @query } %>
+  </div>
+
+  <div class='m9' style='position: relative;'>
+    <div class='grid'>
+      <div class='s6'>
+        <%= render partial: "statement_box", locals: { query: @query } %>
+      </div>
+      <div class='s6'>
+        <%= render 'new_form' %>
+      </div>
+    </div>
+
+    <%= turbo_frame_tag dom_id(@query, 'results'), src: run_query_path(@query.id) do %>
+      Loading...
+    <% end %>
+
+  </div>
+</div>
+

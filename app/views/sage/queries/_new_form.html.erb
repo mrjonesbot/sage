@@ -1,0 +1,43 @@
+<% if @query.errors.any? %>
+  <article class="border red left-round">
+    <i>error</i>
+    <div>
+      <h6>Error</h6>
+      <p><%= @query.errors.full_messages.first %></p>
+    </div>
+  </article>
+<% end %>
+
+<% @variable_params = @query.persisted? ? variable_params(@query) : nested_variable_params(@query) %>
+
+<%= form_for @query, url: (@query.persisted? ? query_path(@query, params: @variable_params) : queries_path(params: @variable_params)), html: {autocomplete: "off", class: ""} do |f| %>
+  <div class="grid">
+    <div class="s10">
+      <div class="field label border">
+        <%= f.text_field :name %>
+        <%= f.label :name, class: (@query.name.present? ? "active" : "") %>
+      </div>
+      
+      <div class="field textarea label border">
+        <%= f.text_area :description, style: "height: 80px; resize: vertical;" %>
+        <%= f.label :description, "Description (Optional)", class: (@query.description.present? ? "active" : "") %>
+      </div>
+      
+      <%= f.hidden_field :statement, id: 'query_statement_form' %>
+    </div>
+    
+    <div class="s2">
+      <nav style="display: flex; flex-direction: column; gap: 12px; padding-left: 8px;">
+        <% if @query.persisted? %>
+          <%= link_to query_path(@query), method: :delete, "data-confirm" => "Are you sure?", class: "button red", title: "Delete" do %>
+            <i>delete</i>
+          <% end %>
+        <% end %>
+        <button type="submit" name="commit" value="<%= @query.persisted? ? "Update" : "Create" %>" class="button primary" title="<%= @query.persisted? ? "Update" : "Create" %>">
+          <i><%= @query.persisted? ? "save" : "add" %></i>
+        </button>
+      </nav>
+    </div>
+  </div>
+<% end %>
+

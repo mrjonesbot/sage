@@ -1,47 +1,559 @@
 module Sage
-  class QueriesController < ApplicationController
-    def new
-      @query = OpenStruct.new(question: "", sql: "")
+  class QueriesController < BaseController
+    before_action :set_query, only: [ :show, :edit, :update, :destroy, :refresh, :run ]
+    before_action :set_data_source, only: [ :tables, :docs, :schema, :cancel ]
+
+    def index
+      @q = Blazer::Query.ransack(params[:q])
+      @queries = @q.result.named.active
+
+      # Only include creator if Blazer.user_class is configured
+      @queries = @queries.includes(:creator) if Blazer.user_class
+
+      @queries = @queries.order(:name)
+
+      # Apply additional filters if needed
+      if blazer_user && params[:filter] == "mine"
+        @queries = @queries.where(creator_id: blazer_user.id).reorder(updated_at: :desc)
+      elsif blazer_user && params[:filter] == "viewed" && Blazer.audit
+        query_ids = Blazer::Audit.where(user_id: blazer_user.id).order(created_at: :desc).limit(500).pluck(:query_id).uniq
+        @queries = @queries.where(id: query_ids)
+      end
+
+      # Filter out private queries (starting with #) unless they belong to the current user
+      @queries = @queries.where("name NOT LIKE ? OR creator_id = ?", "#%", blazer_user.try(:id))
+
+      # Apply pagination with Pagy
+      @pagy, @queries = pagy(@queries)
     end
 
-    def create
-      @query = OpenStruct.new(query_params)
-      
-      # Stub for AI SQL generation - this is where you'll integrate your AI service
-      @query.sql = generate_sql_from_question(@query.question)
-      
-      respond_to do |format|
-        format.turbo_stream
-        format.html { render :new }
+    def new
+      @query = Blazer::Query.new(
+        data_source: params[:data_source],
+        name: params[:name]
+      )
+      if params[:fork_query_id]
+        @query.statement ||= Blazer::Query.find(params[:fork_query_id]).try(:statement)
+      end
+      if params[:upload_id]
+        upload = Blazer::Upload.find(params[:upload_id])
+        upload_settings = Blazer.settings["uploads"]
+        @query.data_source ||= upload_settings["data_source"]
+        @query.statement ||= "SELECT * FROM #{upload.table_name} LIMIT 10"
+      end
+
+      # Get schema information for the current data source
+      data_source_key = @query.data_source || Blazer.data_sources.keys.first
+      @data_source = Blazer.data_sources[data_source_key]
+      if @data_source
+        schema = @data_source.schema
+        # Filter out internal/system tables that aren't relevant for users
+        @schema = schema.reject do |table_info|
+          table_name = table_info[:table].to_s.downcase
+          table_name.start_with?("sage_", "blazer_") ||
+          %w[ar_internal_metadata schema_migrations sqlite_sequence].include?(table_name)
+        end
       end
     end
 
+    def create
+      @query = Blazer::Query.new(query_params)
+      @query.creator = blazer_user if @query.respond_to?(:creator)
+      @query.status = "active" if @query.respond_to?(:status)
+
+      if @query.save
+        redirect_to query_path(@query, params: variable_params(@query))
+      else
+        render_errors @query
+      end
+    end
+
+    def show
+      @statement = @query.statement_object
+      @success = process_vars(@statement)
+
+      @smart_vars = {}
+      @sql_errors = []
+      @bind_vars.each do |var|
+        smart_var, error = parse_smart_variables(var, @statement.data_source)
+        @smart_vars[var] = smart_var if smart_var
+        @sql_errors << error if error
+      end
+
+      @query.update!(status: "active") if @query.respond_to?(:status) && @query.status.in?([ "archived", nil ])
+
+      add_cohort_analysis_vars if @query.cohort_analysis?
+
+      if @success
+        @run_data = { statement: @query.statement, query_id: @query.id, data_source: @query.data_source, variables: variable_params(@query) }
+        @run_data[:forecast] = "t" if params[:forecast]
+        @run_data[:cohort_period] = params[:cohort_period] if params[:cohort_period]
+      end
+    end
+
+    def edit
+      # Messages will be loaded via turbo_frame from messages#index
+    end
+
     def run
-      @query = OpenStruct.new(query_params)
-      
-      # This would integrate with Blazer to run the query
-      # For now, we'll just redirect to Blazer with the query
-      redirect_to blazer_path_with_query(@query.sql)
+      # @query is set by before_action for member routes (GET /queries/:id/run)
+      # For collection routes (POST /queries/run), load query if query_id is provided
+      @query ||= Blazer::Query.find_by(id: params[:query_id]) if params[:query_id]
+
+      # use query data source when present
+      data_source = @query.data_source if @query && @query.data_source
+      data_source ||= params[:data_source]
+      @data_source = Blazer.data_sources[data_source]
+
+      # Prefer params statement over query's saved statement (for live editing)
+      statement = params[:statement].presence || @query&.statement
+      @statement = Blazer::Statement.new(statement, @data_source)
+      # before process_vars
+      @cohort_analysis = @statement.cohort_analysis?
+
+      # fallback for now for users with open tabs
+      # TODO remove fallback in future version
+      @var_params = request.request_parameters["variables"] || request.request_parameters
+      @success = process_vars(@statement, @var_params)
+      @only_chart = params[:only_chart]
+      @run_id = blazer_params[:run_id]
+
+      run_cohort_analysis if @cohort_analysis
+
+      query_running = !@run_id.nil?
+
+      if query_running
+        @timestamp = blazer_params[:timestamp].to_i
+
+        @result = @data_source.run_results(@run_id)
+        @success = !@result.nil?
+
+        if @success
+          @data_source.delete_results(@run_id)
+          @columns = @result.columns
+          @rows = @result.rows
+          @error = @result.error
+          @just_cached = !@result.error && @result.cached_at.present?
+          @cached_at = nil
+          params[:data_source] = nil
+          render_run
+        elsif Time.now > Time.at(@timestamp + (@data_source.timeout || 600).to_i + 5)
+          # query lost
+          Rails.logger.info "[blazer lost query] #{@run_id}"
+          @error = "We lost your query :("
+          @rows = []
+          @columns = []
+          render_run
+        else
+          continue_run
+        end
+      elsif @success
+        @run_id = blazer_run_id
+
+        async = Blazer.async
+
+        options = { user: blazer_user, query: @query, refresh_cache: params[:check], run_id: @run_id, async: async }
+        if async && request.format.symbol != :csv
+          Blazer::RunStatementJob.perform_later(@data_source.id, @statement.statement, options.merge(values: @statement.values))
+          wait_start = Blazer.monotonic_time
+          loop do
+            sleep(0.1)
+            @result = @data_source.run_results(@run_id)
+            break if @result || Blazer.monotonic_time - wait_start > 3
+          end
+        else
+          @result = Blazer::RunStatement.new.perform(@statement, options)
+        end
+
+        if @result
+          @data_source.delete_results(@run_id) if @run_id && async
+
+          @columns = @result.columns
+          @rows = @result.rows
+          @error = @result.error
+          @cached_at = @result.cached_at
+          @just_cached = @result.just_cached
+
+          @forecast = @query && @result.forecastable? && params[:forecast]
+          if @forecast
+            @result.forecast
+            @forecast_error = @result.forecast_error
+            @forecast = @forecast_error.nil?
+          end
+
+          render_run
+        else
+          @timestamp = Time.now.to_i
+          continue_run
+        end
+      else
+        render layout: false
+      end
+    end
+
+    def refresh
+      refresh_query(@query)
+      redirect_to query_path(@query, params: variable_params(@query))
+    end
+
+    def update
+      if params[:commit] == "Fork"
+        @query = Blazer::Query.new
+        @query.creator = blazer_user if @query.respond_to?(:creator)
+      end
+      @query.status = "active" if @query.respond_to?(:status)
+      unless @query.editable?(blazer_user)
+        @query.errors.add(:base, "Sorry, permission denied")
+      end
+      if @query.errors.empty? && @query.update(query_params)
+        redirect_to query_path(@query, params: variable_params(@query))
+      else
+        render_errors @query
+      end
+    end
+
+    def destroy
+      @query.destroy if @query.editable?(blazer_user)
+      redirect_to root_path
+    end
+
+    def tables
+      render json: @data_source.tables
+    end
+
+    def docs
+      @smart_variables = @data_source.smart_variables
+      @linked_columns = @data_source.linked_columns
+      @smart_columns = @data_source.smart_columns
+    end
+
+    def schema
+      @schema = @data_source.schema
+    end
+
+    def table_schema
+      table_name = params[:table_name]
+      data_source_key = params[:data_source] || Blazer.data_sources.keys.first
+      @data_source = Blazer.data_sources[data_source_key]
+
+      if @data_source && table_name.present?
+        schema = @data_source.schema
+        @table_info = schema.find { |table| table[:table] == table_name }
+        @table_display_name = table_name.to_s.gsub("_", " ").titleize
+      end
+
+      render layout: false
+    end
+
+    def cancel
+      @data_source.cancel(blazer_run_id)
+      head :ok
     end
 
     private
 
+    def set_data_source
+      @data_source = Blazer.data_sources[params[:data_source]]
+    rescue Blazer::Error => e
+      raise unless e.message.start_with?("Unknown data source:")
+      render plain: "Unknown data source", status: :not_found
+    end
+
+    def continue_run
+      render json: { run_id: @run_id, timestamp: @timestamp }, status: :accepted
+    end
+
+    def render_run
+      @checks = @query ? @query.checks.order(:id) : []
+
+      @first_row = @rows.first || []
+      @column_types = []
+      if @rows.any?
+        @columns.each_with_index do |_, i|
+          @column_types << (
+            case @first_row[i]
+            when Integer
+              "int"
+            when Float, BigDecimal
+              "float"
+            else
+              "string-ins"
+            end
+          )
+        end
+      end
+
+      @min_width_types = @columns.each_with_index.select { |c, i| @first_row[i].is_a?(Time) || @first_row[i].is_a?(String) || @data_source.smart_columns[c] }.map(&:last)
+
+      @smart_values = @result.smart_values if @result
+
+      @linked_columns = @data_source.linked_columns
+
+      @markers = []
+      @geojson = []
+      set_map_data if Blazer.maps?
+
+      render_cohort_analysis if @cohort_analysis && !@error
+
+      respond_to do |format|
+        format.html do
+          render layout: false
+        end
+        format.turbo_stream
+        format.csv do
+          # not ideal, but useful for testing
+          raise Error, @error if @error && Rails.env.test?
+
+          data = csv_data(@columns, @rows, @data_source)
+          filename = "#{@query.try(:name).try(:parameterize).presence || 'query'}.csv"
+          send_data data, type: "text/csv; charset=utf-8", disposition: "attachment", filename: filename
+        end
+      end
+    end
+
+    def set_map_data
+      [ [ "latitude", "longitude" ], [ "lat", "lon" ], [ "lat", "lng" ] ].each do |keys|
+        lat_index = @columns.index(keys.first)
+        lon_index = @columns.index(keys.last)
+        if lat_index && lon_index
+          @markers =
+            @rows.select do |r|
+              r[lat_index] && r[lon_index]
+            end.map do |r|
+              {
+                tooltip: map_tooltip(r.each_with_index.reject { |v, i| i == lat_index || i == lon_index }),
+                latitude: r[lat_index],
+                longitude: r[lon_index]
+              }
+            end
+
+          return if @markers.any?
+        end
+      end
+
+      geo_index = @columns.index("geojson")
+      if geo_index
+        @geojson =
+          @rows.filter_map do |r|
+            if r[geo_index].is_a?(String) && (geometry = (JSON.parse(r[geo_index]) rescue nil)) && geometry.is_a?(Hash)
+              {
+                tooltip: map_tooltip(r.each_with_index.reject { |v, i| i == geo_index }),
+                geometry: geometry
+              }
+            end
+          end
+      end
+    end
+
+    def map_tooltip(r)
+      r.map { |v, i| "<strong>#{ERB::Util.html_escape(@columns[i])}:</strong> #{ERB::Util.html_escape(v)}" }.join("<br>").truncate(140, separator: " ")
+    end
+
+    def set_queries(limit = nil)
+      @queries = Blazer::Query.named.select(:id, :name, :creator_id, :statement)
+      @queries = @queries.includes(:creator) if Blazer.user_class
+
+      if blazer_user && params[:filter] == "mine"
+        @queries = @queries.where(creator_id: blazer_user.id).reorder(updated_at: :desc)
+      elsif blazer_user && params[:filter] == "viewed" && Blazer.audit
+        @queries = queries_by_ids(Blazer::Audit.where(user_id: blazer_user.id).order(created_at: :desc).limit(500).pluck(:query_id).uniq)
+      else
+        @queries = @queries.limit(limit) if limit
+        @queries = @queries.active.order(:name)
+      end
+      @queries = @queries.to_a
+
+      @more = limit && @queries.size >= limit
+
+      @queries = @queries.select { |q| !q.name.to_s.start_with?("#") || q.try(:creator).try(:id) == blazer_user.try(:id) }
+    end
+
+    def queries_by_ids(favorite_query_ids)
+      queries = Blazer::Query.active.named.where(id: favorite_query_ids)
+      queries = queries.includes(:creator) if Blazer.user_class
+      queries = queries.index_by(&:id)
+      favorite_query_ids.map { |query_id| queries[query_id] }.compact
+    end
+
+    def set_query
+      @query = Blazer::Query.find_by(id: params[:id].to_s.split("-").first) if params[:id]
+    end
+
+    def render_forbidden
+      render plain: "Access denied", status: :forbidden
+    end
+
     def query_params
-      params.require(:query).permit(:question, :sql)
+      params.require(:query).permit(:name, :description, :statement, :data_source)
     end
 
-    def generate_sql_from_question(question)
-      # Placeholder for AI integration
-      # In production, this would call your AI service (OpenAI, Anthropic, etc.)
-      "-- AI generated SQL for: #{question}\n" +
-      "-- TODO: Integrate with AI service\n" +
-      "SELECT 'Please configure AI service' as message;"
+    def blazer_params
+      params[:blazer] || {}
     end
 
-    def blazer_path_with_query(sql)
-      # Construct Blazer URL with the SQL query
-      # This assumes Blazer is mounted at /blazer in the host app
-      main_app.blazer_path + "?query[statement]=" + CGI.escape(sql)
+    def csv_data(columns, rows, data_source)
+      CSV.generate do |csv|
+        csv << columns
+        rows.each do |row|
+          csv << row.each_with_index.map { |v, i| v.is_a?(Time) ? blazer_time_value(data_source, columns[i], v) : v }
+        end
+      end
+    end
+
+    def blazer_time_value(data_source, k, v)
+      data_source.local_time_suffix.any? { |s| k.ends_with?(s) } ? v.to_s.sub(" UTC", "") : v.in_time_zone(Blazer.time_zone)
+    end
+    helper_method :blazer_time_value
+
+    def blazer_run_id
+      params[:run_id].to_s.gsub(/[^a-z0-9\-]/i, "")
+    end
+
+    def run_cohort_analysis
+      unless @statement.data_source.supports_cohort_analysis?
+        @cohort_error = "This data source does not support cohort analysis"
+      end
+
+      @show_cohort_rows = !params[:query_id] || @cohort_error
+      cohort_analysis_statement(@statement) unless @show_cohort_rows
+    end
+
+    def render_cohort_analysis
+      if @show_cohort_rows
+        @cohort_analysis = false
+
+        @row_limit = 1000
+
+        # check results
+        unless @cohort_error
+          # check names
+          expected_columns = [ "user_id", "conversion_time" ]
+          missing_columns = expected_columns - @result.columns
+          if missing_columns.any?
+            @cohort_error = "Expected user_id and conversion_time columns"
+          end
+
+          # check types (user_id can be any type)
+          unless @cohort_error
+            column_types = @result.columns.zip(@result.column_types).to_h
+
+            if !column_types["cohort_time"].in?([ "time", nil ])
+              @cohort_error = "cohort_time must be time column"
+            elsif !column_types["conversion_time"].in?([ "time", nil ])
+              @cohort_error = "conversion_time must be time column"
+            end
+          end
+        end
+      else
+        @today = Blazer.time_zone.today
+        @min_cohort_date, @max_cohort_date = @result.rows.map { |r| r[0] }.minmax
+        @buckets = {}
+        @rows.each do |r|
+          @buckets[[ r[0], r[1] ]] = r[2]
+        end
+
+        @cohort_dates = []
+        current_date = @max_cohort_date
+        while current_date && current_date >= @min_cohort_date
+          @cohort_dates << current_date
+          current_date =
+            case @cohort_period
+            when "day"
+              current_date - 1
+            when "week"
+              current_date - 7
+            else
+              current_date.prev_month
+            end
+        end
+
+        num_cols = @cohort_dates.size
+        @columns = [ "Cohort", "Users" ] + num_cols.times.map { |i| "#{@conversion_period.titleize} #{i + 1}" }
+        rows = []
+        date_format = @cohort_period == "month" ? "%b %Y" : "%b %-e, %Y"
+        @cohort_dates.each do |date|
+          row = [ date.strftime(date_format), @buckets[[ date, 0 ]] || 0 ]
+
+          num_cols.times do |i|
+            if @today >= date + (@cohort_days * i)
+              row << (@buckets[[ date, i + 1 ]] || 0)
+            end
+          end
+
+          rows << row
+        end
+        @rows = rows
+      end
     end
   end
 end
+#
+# module Sage
+#   class QueriesController < ApplicationController
+#     before_action :set_data_source
+#
+#     def new
+#       @query = Blazer::Query.new
+#     end
+#
+#     def create
+#       @query = Blazer::Query.new(name: "Sage Query: #{Time.current}")
+#       @query.statement = generate_sql_from_question(query_params[:question])
+#       @query.creator = blazer_user if defined?(blazer_user)
+#
+#       # Optionally save the query if configured
+#       if Sage.configuration.auto_save_queries && @query.statement.present?
+#         @query.save
+#       end
+#
+#       # Store the question for display
+#       @question = query_params[:question]
+#
+#       respond_to do |format|
+#         format.turbo_stream
+#         format.html { render :new }
+#       end
+#     end
+#
+#     def run
+#       @query = Blazer::Query.new(statement: query_params[:sql])
+#
+#       # Use Blazer's run method to execute the query
+#       @result = Blazer.data_sources[@data_source].run_statement(@query.statement)
+#
+#       # Check for errors
+#       if @result.error.present?
+#         @error = @result.error
+#       end
+#
+#       respond_to do |format|
+#         format.turbo_stream
+#         format.html
+#       end
+#     end
+#
+#     private
+#
+#     def set_data_source
+#       @data_source = params[:data_source] || Blazer.data_sources.keys.first
+#     end
+#
+#     def query_params
+#       params.require(:query).permit(:question, :sql, :data_source)
+#     end
+#
+#     def generate_sql_from_question(question)
+#       # Placeholder for AI integration
+#       # In production, this would call your AI service (OpenAI, Anthropic, etc.)
+#       "-- AI generated SQL for: #{question}\n" +
+#       "-- TODO: Integrate with AI service\n" +
+#       "SELECT 'Please configure AI service' as message;"
+#     end
+#
+#     def blazer_user
+#       # Override this method to provide the current user
+#       # For example: current_user.email if using Devise
+#       "sage-user"
+#     end
+#   end
+# end

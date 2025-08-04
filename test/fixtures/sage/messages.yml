@@ -1,0 +1,11 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  query: one
+  creator: one
+  body: MyString
+
+two:
+  query: two
+  creator: two
+  body: MyString

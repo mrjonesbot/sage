@@ -4,7 +4,7 @@ Gem::Specification.new do |spec|
   spec.name          = "sage"
   spec.version       = Sage::VERSION
   spec.summary       = "AI-powered SQL query generator for Blazer. Generate SQL queries from natural language questions."
-  spec.homepage      = "https://github.com/yourusername/sage"
+  spec.homepage      = "https://github.com/mrjonesbot/sage"
   spec.license       = "MIT"
 
   spec.author        = "Nathan Jones"
@@ -19,6 +19,9 @@ Gem::Specification.new do |spec|
   spec.add_dependency "activerecord", ">= 7.1"
   spec.add_dependency "blazer", ">= 3.0"
   spec.add_dependency "turbo-rails"
-  spec.add_dependency "stimulus-rails"
   spec.add_dependency "importmap-rails"
+  spec.add_dependency "ransack"
+  spec.add_dependency "pagy"
+  spec.add_dependency "ruby_llm"
+  spec.add_dependency "ruby_llm-schema"
 end
