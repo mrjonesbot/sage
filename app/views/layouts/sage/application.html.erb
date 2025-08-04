@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sage - AI SQL Assistant</title>
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
+
+  <%= yield :head %>
+
+  <% if defined?(Blazer) && File.exist?(Blazer::Engine.root.join("app/assets/stylesheets/blazer/application.css")) %>
+    <%= stylesheet_link_tag "blazer/application", media: "all" %>
+  <% end %>
+  
+  <%= stylesheet_link_tag "sage/application", media: "all" %>
+  <%= javascript_importmap_tags %>
+</head>
+<body>
+  <div class="sage-wrapper">
+    <% if defined?(Blazer) %>
+      <!-- Try to reuse Blazer's header/navigation if available -->
+      <nav class="sage-nav">
+        <%= link_to "Sage", main_app.sage_path, class: "sage-brand" %>
+        <%= link_to "Back to Blazer", main_app.blazer_path, class: "sage-nav-link" %>
+      </nav>
+    <% end %>
+
+    <div class="sage-content">
+      <%= yield %>
+    </div>
+  </div>
+</body>
+</html>
