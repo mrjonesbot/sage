@@ -1,0 +1,22 @@
+<%= turbo_stream.append dom_id(@query, 'messages') do %>
+  <% if @need_day_separator %>
+    <div class="day-separator center-align small-margin">
+      <small class="secondary-text bold"><%= format_message_date(@message.created_at.to_date) %></small>
+    </div>
+  <% end %>
+  <%= render partial: 'sage/queries/message', locals: { message: @message } %>
+  <script>
+    setTimeout(() => {
+      const messagesDiv = document.getElementById('<%= dom_id(@query, 'messages') %>');
+      if (messagesDiv) {
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
+    }, 10);
+  </script>
+<% end %>
+
+<%= turbo_stream.replace(dom_id(@query, 'input')) do %>
+  <%= render partial: 'sage/queries/input', locals: { query: @query } %>
+<% end %>
+
+<%= turbo_stream.update 'chat-textarea', "" %>

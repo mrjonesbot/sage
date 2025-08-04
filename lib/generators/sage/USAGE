@@ -1,0 +1,13 @@
+Description:
+    Installs Sage engine JavaScript files and importmap configuration.
+
+    This generator copies the necessary JavaScript files from the Sage engine
+    to your Rails application and configures importmap-rails to load them.
+
+Example:
+    bin/rails generate sage:install
+
+    This will:
+      1. Copy JavaScript files to app/javascript/sage/
+      2. Add importmap pins to config/importmap.rb
+      3. Display setup instructions

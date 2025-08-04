@@ -1,0 +1,46 @@
+.flash {
+  align-items: center;
+  animation: appear-then-fade 4s 300ms both;
+  background-color: var(--flash-background, var(--color-text));
+  border-radius: var(--rounded-full);
+  color: var(--flash-color, var(--color-text-reversed));
+  column-gap: var(--size-2);
+  display: inline-flex;
+  font-size: var(--text-fluid-base);
+  justify-content: center;
+  line-height: var(--leading-none);
+  margin-block-start: var(--flash-position, var(--size-5));
+  margin-inline: auto;
+  min-block-size: var(--size-11);
+  padding: var(--size-1) var(--size-4);
+  text-align: center;
+
+  [data-turbo-preview] & {
+    display: none;
+  }
+}
+
+.flash--positive {
+  --flash-background: var(--color-positive);
+  --flash-color: white;
+}
+
+.flash--negative {
+  --flash-background: var(--color-negative);
+  --flash-color: white;
+}
+
+.flash--extended {
+  animation-name: appear-then-fade-extended;
+  animation-duration: 12s;
+}
+
+@keyframes appear-then-fade {
+  0%, 100% { opacity: 0; }
+  5%, 60%  { opacity: 1; }
+}
+
+@keyframes appear-then-fade-extended {
+  0%, 100% { opacity: 0; }
+  2%, 90% { opacity: 1; }
+}

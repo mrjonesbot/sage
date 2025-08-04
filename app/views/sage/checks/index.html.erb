@@ -1,0 +1,58 @@
+<% blazer_title "Checks" %>
+
+<div class="padding left-align <%= "#{current_page?(checks_path) ? 'active' : ''}" %>">
+  <h5>Checks</h5>
+</div>
+
+<div id="">
+  <div class="row right-align">
+    <%= link_to new_check_path do %>
+      <button>
+        New Check
+      </button>
+    <% end %>
+  </div>
+</div>
+
+<%= render partial: 'search' %>
+
+<table id="checks" class="table">
+  <thead>
+    <tr>
+      <th>Query</th>
+      <th style="width: 15%;">State</th>
+      <th style="width: 10%;">Run</th>
+      <th style="width: 25%;">Notify</th>
+      <th style="width: 15%; text-align: right;"></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @checks.each do |check| %>
+      <tr>
+        <td>
+          <%= link_to check.query.name, check.query %> 
+          <% if check.try(:check_type) %>
+            <span class="text-muted"><%= check.check_type.to_s.gsub("_", " ") %></span>
+          <% end %>
+        </td>
+        <td style="vertical-align: middle;">
+          <% if check.state %>
+            <span class="chip <%= check.state.parameterize.gsub("-", "_") %>"><%= check.state.upcase %></span>
+          <% end %>
+        </td>
+        <td style="vertical-align: middle;">
+          <%= check.schedule if check.respond_to?(:schedule) %>
+        </td>
+        <td style="vertical-align: middle;">
+          <% notify_items = check.split_emails + check.split_slack_channels %>
+          <%= notify_items.join(", ") if notify_items.any? %>
+        </td>
+        <td style="text-align: right; vertical-align: middle;">
+          <%= link_to "Edit", edit_check_path(check) %>
+          <%= link_to "Run Now", run_check_path(check), class: "button primary" %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+

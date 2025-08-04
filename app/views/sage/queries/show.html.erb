@@ -1,0 +1,49 @@
+<% blazer_title @query.name %>
+
+<div class="padding left-align">
+  <h5 style="">
+    <%= @query.name %>
+  </h5>
+</div>
+
+<div class="row right-align">
+  <%= link_to "Edit", edit_query_path(@query, params: variable_params(@query)), class: "btn btn-default", data: { turbo: false }, disabled: !@query.editable?(blazer_user) %>
+  <%= link_to "Fork", new_query_path(params: {variables: variable_params(@query), fork_query_id: @query.id, data_source: @query.data_source, name: @query.name}), class: "btn btn-info" %>
+  <% if !@error && @success %>
+    <%= button_to "Download", "/queries/run.csv", params: @run_data, class: "btn btn-primary" %>
+  <% end %>
+</div>
+
+<% if @sql_errors.any? %>
+  <div class="alert alert-danger">
+    <ul>
+      <% @sql_errors.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
+
+<% if @query.description.present? %>
+  <p style="white-space: pre-line;"><%= @query.description %></p>
+<% end %>
+
+<%= render partial: "blazer/variables", locals: { action: query_path(@query) } %>
+
+<pre id="code"><code><%= @statement.display_statement %></code></pre>
+
+<% if @success %>
+  <%= turbo_frame_tag dom_id(@query, 'results'), src: run_query_path(@query.id, from_show: true) do  %>
+    loading...
+  <% end %>
+<% end %>
+
+<%= javascript_tag nonce: true do %>
+  // do not highlight really long queries
+  // this can lead to performance issues
+  var code = $("#code code")
+  if (code.text().length < 10000) {
+    hljs.highlightElement(code.get(0))
+  }
+<% end %>
+

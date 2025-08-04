@@ -1,13 +1,19 @@
+<%= blazer_title "New Query" %>
+<%# <%= render partial: "form" %>
+
+<div class="padding left-align">
+  <h5 class="">New Query</h5>
+</div>
+
 <div class="sage-container">
   <div class="sage-header">
-    <h1>Sage - AI SQL Assistant</h1>
-    <p class="text-muted">Ask a question in natural language, and I'll help generate the SQL query</p>
+    <h5>What are you curious about?</h5>
   </div>
 
-  <%= form_with model: @query, url: queries_path, local: false, data: { turbo_frame: "query_result" } do |f| %>
+  <%= form_with url: queries_path, local: false, data: { turbo_frame: "query_result" } do |f| %>
     <div class="form-group">
-      <%= f.label :question, "Your Question", class: "form-label" %>
-      <%= f.text_area :question, 
+      <%= label_tag "query[question]", "Your Question", class: "form-label" %>
+      <%= text_area_tag "query[question]", nil, 
           class: "form-control", 
           rows: 3,
           placeholder: "e.g., Show me the top 10 customers by revenue in the last 30 days",
@@ -19,18 +25,52 @@
     </div>
 
     <div class="form-actions">
-      <%= f.submit "Generate SQL", class: "btn btn-primary", data: { disable_with: "Generating..." } %>
+      <button type='submit' data-disable-with='Generating...'>Generate Report</button>
     </div>
   <% end %>
 
   <turbo-frame id="query_result">
-    <!-- Generated SQL will appear here -->
   </turbo-frame>
+
+  <% if @schema.present? %>
+    <div class="padding">
+      <h6>Schema Guide</h6>
+      <p class="small-text">Available tables and their columns</p>
+      
+      <div class="grid">
+        <% @schema.each_with_index do |table_info, index| %>
+          <div class="s12 m6 l3">
+            <article class="schema-card">
+              <h5 class="table-title">
+                <i class="small">table</i>
+                <%= table_info[:table].to_s.gsub('_', ' ').titleize.truncate(20) %>
+              </h5>
+              <p class="small-text grey-text table-name"><%= table_info[:table].truncate(25) %></p>
+              
+              <p class="column-count">
+                <span class="large-text"><%= table_info[:columns].size %></span>
+                <span class="small-text">columns</span>
+              </p>
+              
+              <%= link_to "View Columns", 
+                  table_schema_queries_path(table_name: table_info[:table]), 
+                  class: "button small view-columns-btn",
+                  data: { turbo_frame: "overlay" } %>
+            </article>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% else %>
+    <div class="center-align padding">
+      <p class="grey-text">Schema information not available</p>
+    </div>
+  <% end %>
 </div>
 
 <style>
   .sage-container {
-    max-width: 800px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 20px;
   }
@@ -103,4 +143,6 @@
     color: #666;
     font-size: 14px;
   }
+
 </style>
+

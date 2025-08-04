@@ -3,22 +3,25 @@
     <h3>Generated SQL Query</h3>
     
     <div class="sql-container">
-      <pre class="sql-code"><%= @query.sql %></pre>
+      <pre class="sql-code"><%= @query.statement %></pre>
       
       <div class="query-actions">
-        <%= form_with model: @query, url: run_query_path(id: SecureRandom.hex), method: :post do |f| %>
-          <%= f.hidden_field :sql %>
-          <%= f.hidden_field :question %>
+        <%= form_with url: run_query_path(id: @query.id || "temp"), method: :post, local: false do |f| %>
+          <%= hidden_field_tag "query[sql]", @query.statement %>
+          <%= hidden_field_tag "query[question]", @question %>
           
           <div class="button-group">
-            <%= f.submit "Run in Blazer", class: "btn btn-success" %>
+            <%= f.submit "Run Query", class: "btn btn-success" %>
             <%= link_to "Copy SQL", "#", 
                 class: "btn btn-secondary",
                 data: { 
                   controller: "clipboard",
-                  clipboard_text_value: @query.sql,
+                  clipboard_text_value: @query.statement,
                   action: "click->clipboard#copy"
                 } %>
+            <% if @query.persisted? %>
+              <%= link_to "View in Blazer", main_app.blazer_query_path(@query), class: "btn btn-secondary", target: "_blank" %>
+            <% end %>
             <%= link_to "New Query", new_query_path, class: "btn btn-outline", data: { turbo_frame: "_top" } %>
           </div>
         <% end %>
@@ -27,7 +30,7 @@
 
     <div class="query-metadata">
       <p class="text-muted">
-        <strong>Original question:</strong> <%= @query.question %>
+        <strong>Original question:</strong> <%= @question %>
       </p>
     </div>
   </div>

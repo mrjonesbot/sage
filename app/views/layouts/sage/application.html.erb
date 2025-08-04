@@ -1,32 +1,91 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Sage - AI SQL Assistant</title>
-  <%= csrf_meta_tags %>
-  <%= csp_meta_tag %>
+  <head>
+    <title><%= blazer_title ? "Sage - #{blazer_title}": "Sage - Natural language reporting" %></title>
 
-  <%= yield :head %>
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
 
-  <% if defined?(Blazer) && File.exist?(Blazer::Engine.root.join("app/assets/stylesheets/blazer/application.css")) %>
-    <%= stylesheet_link_tag "blazer/application", media: "all" %>
-  <% end %>
-  
-  <%= stylesheet_link_tag "sage/application", media: "all" %>
-  <%= javascript_importmap_tags %>
-</head>
-<body>
-  <div class="sage-wrapper">
-    <% if defined?(Blazer) %>
-      <!-- Try to reuse Blazer's header/navigation if available -->
-      <nav class="sage-nav">
-        <%= link_to "Sage", main_app.sage_path, class: "sage-brand" %>
-        <%= link_to "Back to Blazer", main_app.blazer_path, class: "sage-nav-link" %>
-      </nav>
+    <%= yield :head %>
+
+    <% if defined?(Propshaft::Railtie) && Rails.application.assets.is_a?(Propshaft::Assembly) %>
+      <%= stylesheet_link_tag "sage/application", "blazer/selectize", "blazer/daterangepicker" %>
+      <%= javascript_include_tag "blazer/jquery", "blazer/rails-ujs", "blazer/stupidtable", "blazer/stupidtable-custom-settings", "blazer/jquery.stickytableheaders", "blazer/selectize", "blazer/highlight.min", "blazer/moment", "blazer/moment-timezone-with-data", "blazer/daterangepicker", "blazer/chart.umd", "blazer/chartjs-adapter-date-fns.bundle", "blazer/chartkick", "blazer/mapkick.bundle", "blazer/ace/ace", "blazer/ace/ext-language_tools", "blazer/ace/theme-twilight", "blazer/ace/mode-sql", "blazer/ace/snippets/text", "blazer/ace/snippets/sql", "blazer/Sortable", "blazer/vue.global.prod", "blazer/routes", "blazer/queries", "blazer/fuzzysearch", nonce: true %>
+    <% else %>
+      <%= stylesheet_link_tag "sage/application" %>
+      <%= javascript_importmap_tags %>
     <% end %>
 
-    <div class="sage-content">
+    <!-- Beer CSS - loaded after other stylesheets to take precedence -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/beercss@3.11.33/dist/cdn/beer.min.css">
+    <script type="module" src="https://cdn.jsdelivr.net/npm/beercss@3.11.33/dist/cdn/beer.min.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/material-dynamic-colors@1.1.2/dist/cdn/material-dynamic-colors.min.js"></script>
+
+    <!-- Material Icons -->
+    <%# <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" /> %>
+
+    <%= javascript_importmap_tags %>
+    <%= javascript_tag nonce: true do %>
+      <%= blazer_js_var "rootPath", root_path %>
+      
+      function changeTheme() {
+        // Use Beer CSS mode functions
+        if (typeof ui === 'function') {
+          const currentMode = ui("mode");
+          const newMode = currentMode === 'dark' ? 'light' : 'dark';
+          ui("mode", newMode);
+          // Store the preference to prevent system override
+          localStorage.setItem('sage-theme-mode', newMode);
+          updateThemeIcon();
+        }
+      }
+      
+      function updateThemeIcon() {
+        const themeButton = document.getElementById('theme-toggle');
+        const themeIcon = themeButton ? themeButton.querySelector('i') : null;
+        
+        if (themeIcon && typeof ui === 'function') {
+          const currentMode = ui("mode");
+          themeIcon.textContent = currentMode === 'dark' ? 'light_mode' : 'dark_mode';
+        }
+      }
+      
+      // Initialize theme on page load (works with Turbo)
+      function initializeTheme() {
+        // Check if user has a saved preference
+        const savedMode = localStorage.getItem('sage-theme-mode');
+        if (savedMode && typeof ui === 'function') {
+          ui("mode", savedMode);
+        }
+        // Update the icon
+        updateThemeIcon();
+      }
+      
+      // Initialize on DOM ready and Turbo navigation
+      document.addEventListener('DOMContentLoaded', initializeTheme);
+      document.addEventListener('turbo:load', initializeTheme);
+      
+      // Handle modal dialogs when turbo frames load
+      document.addEventListener('turbo:frame-load', function(event) {
+        // Check if this is the overlay frame and contains a dialog
+        if (event.target.id === 'overlay') {
+          const dialog = event.target.querySelector('#dialog');
+          if (dialog && typeof ui === 'function') {
+            // Small delay to ensure DOM is fully rendered
+            requestAnimationFrame(() => {
+              ui('#dialog');
+            });
+          }
+        }
+      });
+    <% end %>
+  </head>
+  <body id='layout' class=''>
+    <%= render partial: 'sage/shared/navigation' %>
+
+    <main class='responsive center-align <%= "max" if current_page?(edit_query_path(params[:id])) rescue nil %>'>
       <%= yield %>
-    </div>
-  </div>
-</body>
+      <%= turbo_frame_tag "overlay" %>
+    </main>
+  </body>
 </html>

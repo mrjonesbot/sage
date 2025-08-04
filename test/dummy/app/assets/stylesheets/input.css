@@ -1,0 +1,76 @@
+.input {
+  appearance: none;
+  background-color: var(--input-background, var(--color-surface));
+  block-size: var(--input-block-size, auto);
+  border: 1px solid var(--input-border-color, var(--color-border));
+  border-radius: var(--input-radius, var(--rounded-md));
+  box-shadow: var(--input-box-shadow, var(--shadow-xs));
+  font-size: var(--input-font-size, var(--text-sm));
+  inline-size: var(--input-inline-size, var(--size-full));
+  padding: var(--input-padding, .375rem .75rem);
+
+  option {
+    padding: revert;
+  }
+
+  &:is(textarea[rows="auto"]) {
+    field-sizing: content;
+    max-block-size: calc(.875rem + var(--input-max-rows, 10lh));
+    min-block-size: calc(.875rem + var(--input-rows, 2lh));
+  }
+
+  &:is(select):not([multiple], [size]) {
+    background-image: url("chevron-down-zinc-500.svg");
+    background-position: center right var(--size-2);
+    background-repeat: no-repeat;
+    background-size: var(--size-4) auto;
+  }
+
+  &::file-selector-button {
+    font-weight: var(--font-medium);
+  }
+
+  &:user-invalid {
+    border-color: var(--color-negative);
+  }
+
+  &:user-invalid + .invalid-feedback {
+    display: flex;
+  }
+
+  &:focus-visible {
+    outline: var(--input-outline-size, 2px) solid var(--color-selected-dark);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: var(--opacity-50);
+  }
+
+  .field_with_errors & {
+    border-color: var(--color-negative);
+  }
+}
+
+:is(.checkbox, .radio) {
+  accent-color: var(--color-primary);
+  transform: scale(1.2);
+
+  &:focus-visible {
+    outline: var(--input-outline-size, 2px) solid var(--color-selected-dark);
+  }
+
+  .field_with_errors & {
+    border-color: var(--color-negative);
+  }
+}
+
+.input--actor {
+  input {
+    border: 0; inline-size: 100%; outline: 0;
+  }
+
+  &:focus-within {
+    outline: var(--input-outline-size, 2px) solid var(--color-selected-dark);
+  }
+}

@@ -1,0 +1,86 @@
+<%= turbo_stream_from "statements" %>
+
+<div id=<%= dom_id(query, 'statement-box') %> class='' style="position: relative;">
+  <%= form_with url: sage.run_queries_path, method: :post do |f| %>
+    <%= f.hidden_field :statement, id: 'query_statement' %>
+    <%= f.hidden_field :query_id, value: query.id %>
+    <%= f.hidden_field :data_source, value: query.data_source || Blazer.data_sources.keys.first %>
+    <div id="editor-container" style="position: relative; overflow: hidden;">
+      <div id="editor" style="height: 200px;" data-initial-content="<%= html_escape(local_assigns[:statement] || query.statement) %>"><%= local_assigns[:statement] || query.statement %></div>
+      <div style="position: absolute; bottom: 10px; right: 15px; z-index: 1000; border-radius: 4px; padding: 5px;">
+        <button type='submit'>Run</button>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<%= javascript_tag nonce: true do %>
+  function initializeEditor() {
+  // Destroy existing editor if it exists
+  if (window.aceEditor) {
+    window.aceEditor.destroy();
+  }
+  
+  var editor = ace.edit("editor")
+  window.aceEditor = editor;
+  editor.setTheme("ace/theme/twilight")
+  editor.getSession().setMode("ace/mode/sql")
+  editor.setOptions({
+  enableBasicAutocompletion: false,
+  enableSnippets: false,
+  enableLiveAutocompletion: false,
+  highlightActiveLine: false,
+  fontSize: 12,
+  minLines: 10
+  })
+  editor.renderer.setShowGutter(true)
+  editor.renderer.setPrintMarginColumn(false)
+  editor.setShowPrintMargin(false)
+  editor.renderer.setPadding(10)
+  editor.getSession().setUseWrapMode(true)
+
+  // Update both hidden fields when editor content changes
+  editor.getSession().on("change", function () {
+  const value = editor.getValue()
+  $("#query_statement").val(value)  // For run form
+  $("#query_statement_form").val(value)  // For main form
+  })
+
+  // Set initial value from data attribute or current content
+  const editorDiv = document.getElementById("editor")
+  const initialContent = editorDiv.getAttribute("data-initial-content") || editor.getValue()
+  
+  if (initialContent && initialContent !== editor.getValue()) {
+    editor.setValue(initialContent, -1) // -1 moves cursor to start
+  }
+  
+  const initialValue = editor.getValue()
+  $("#query_statement").val(initialValue)
+  $("#query_statement_form").val(initialValue)
+  editor.focus()
+
+  // Add top padding to ace_scroller and gutter to keep them aligned
+  const aceScroller = document.querySelector('.ace_scroller');
+  const aceGutter = document.querySelector('.ace_gutter');
+
+  if (aceScroller) {
+  aceScroller.style.paddingTop = '10px';
+  }
+  if (aceGutter) {
+  aceGutter.style.paddingTop = '10px';
+  }
+  }
+
+  // Initialize on page load
+  document.addEventListener('turbo:load', initializeEditor);
+  
+  // Initialize when this partial is replaced via Turbo Stream
+  document.addEventListener('turbo:frame-load', initializeEditor);
+  
+  // Also initialize immediately if the DOM is already loaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeEditor);
+  } else {
+    initializeEditor();
+  }
+<% end %>

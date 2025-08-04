@@ -1,0 +1,72 @@
+<% if @query.errors.any? %>
+  <div class="alert alert-danger"><%= @query.errors.full_messages.first %></div>
+<% end %>
+
+<% @variable_params = @query.persisted? ? variable_params(@query) : nested_variable_params(@query) %>
+
+<div id="app" v-cloak>
+  <%= form_for @query, url: (@query.persisted? ? query_path(@query, params: @variable_params) : queries_path(params: @variable_params)), html: {autocomplete: "off"} do |f| %>
+    <div class="row">
+      <div class="col-xs-4">
+        <div class="form-group">
+          <%= f.label :name %>
+          <%= f.text_field :name, class: "form-control" %>
+        </div>
+        <div class="form-group">
+          <%= f.label :description %>
+          <%= f.text_area :description, placeholder: "Optional", style: "height: 80px;", class: "form-control" %>
+        </div>
+        <div class="form-group text-right">
+          <%= f.submit "For Enter Press", class: "hide" %>
+          <% if @query.persisted? %>
+            <%= link_to "Delete", query_path(@query), method: :delete, "data-confirm" => "Are you sure?", class: "btn btn-danger" %>
+            <%= f.submit "Fork", class: "btn btn-info" %>
+          <% end %>
+          <%= f.submit @query.persisted? ? "Update" : "Create", class: "btn btn-success" %>
+        </div>
+        <% if @query.persisted? %>
+          <% dashboards_count = @query.dashboards.count %>
+          <% checks_count = @query.checks.count %>
+          <% words = [] %>
+          <% words << pluralize(dashboards_count, "dashboard") if dashboards_count > 0 %>
+          <% words << pluralize(checks_count, "check") if checks_count > 0 %>
+          <% if words.any? %>
+            <div class="alert alert-info">
+              Part of <%= words.to_sentence %>. Be careful when editing.
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <div id="results">
+    <p class="text-muted" v-if="running">Loading...</p>
+    <div id="results-html" v-if="!running" :class="{ 'query-error': error }"></div>
+  </div>
+</div>
+
+<%= javascript_tag nonce: true do %>
+  <%= blazer_js_var "variableParams", @variable_params %>
+  <%= blazer_js_var "previewStatement", Blazer.data_sources.to_h { |k, v| [k, (v.preview_statement rescue "")] } %>
+
+  var app = Vue.createApp({
+    data: function() {
+      return {
+        running: false,
+        results: "",
+        error: false
+      }
+    },
+    methods: {
+      showResults(data) {
+        Vue.nextTick(function () {
+          $("#results-html").html(data)
+        })
+      }
+    }
+  })
+  app.config.compilerOptions.whitespace = "preserve"
+  app.mount("#app")
+<% end %>
+

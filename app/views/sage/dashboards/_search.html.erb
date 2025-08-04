@@ -1,0 +1,8 @@
+<%= search_form_for @q, url: dashboards_path, class: 'field border prefix round', data: { controller: 'sage--search', turbo_frame: "dashboards" } do |f| %>
+
+  <i class="front">search</i>
+  <%= f.search_field :name_cont, 
+                     placeholder: "Search dashboards by name...", 
+                     class: 'text',
+                     data: { action: 'input->sage--search#submit' } %>
+<% end %>
