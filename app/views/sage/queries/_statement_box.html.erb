@@ -1,7 +1,7 @@
 <%= turbo_stream_from "statements" %>
 
 <div id=<%= dom_id(query, 'statement-box') %> class='' style="position: relative;">
-  <%= form_with url: run_queries_path, method: :post do |f| %>
+  <%= form_with url: sage.run_queries_path, method: :post do |f| %>
     <%= f.hidden_field :statement, id: 'query_statement' %>
     <%= f.hidden_field :query_id, value: query.id %>
     <%= f.hidden_field :data_source, value: query.data_source || Blazer.data_sources.keys.first %>

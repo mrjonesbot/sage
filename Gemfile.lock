@@ -233,7 +233,7 @@ GEM
       faraday-retry (>= 1)
       marcel (~> 1.0)
       zeitwerk (~> 2)
-    ruby_llm-schema (0.1.6)
+    ruby_llm-schema (0.2.1)
     safely_block (0.5.0)
     securerandom (0.4.1)
     sqlite3 (2.7.3-arm64-darwin)
