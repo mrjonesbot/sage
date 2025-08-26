@@ -176,7 +176,6 @@ module Sage
         end
         prompt_parts << "\nUse this context to understand the conversation flow and build upon previous queries when appropriate.\n"
       end
-
       # Add database schema
       prompt_parts << "\n\n## DATABASE SCHEMA\n"
       prompt_parts << "Available tables and their columns (use these exact names in your queries):\n"
@@ -220,7 +219,6 @@ module Sage
             table: model.table_name,
             scopes: []
           }
-
           scopes.each do |scope_name|
             # Try to get scope SQL if possible
             begin
@@ -246,7 +244,6 @@ module Sage
           models_with_scopes << model_info
         end
       end
-
       # Format the model scopes nicely
       if models_with_scopes.any?
         models_with_scopes.each do |model_info|
@@ -256,19 +253,16 @@ module Sage
           end
         end
       end
-
       prompt_parts << "\n\n## QUERY GENERATION RULES"
       prompt_parts << "1. Match table and column names EXACTLY as shown in the schema"
       prompt_parts << "2. Use the scope patterns as guidance for common filters and joins"
       prompt_parts << "3. Generate ONE query that best answers the user's request"
       prompt_parts << "4. Optimize for clarity and performance"
-
       prompt_parts.join("\n")
     end
 
     def detect_database_type
       adapter_name = ActiveRecord::Base.connection.adapter_name.downcase
-
       case adapter_name
       when /postgresql/, /postgis/
         "PostgreSQL"
