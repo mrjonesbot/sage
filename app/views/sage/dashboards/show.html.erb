@@ -1,0 +1,58 @@
+<% blazer_title @dashboard.name %>
+
+<div class="padding left-align row" style="">
+  <h5 style="">
+    <%= @dashboard.name %>
+  </h5>
+  <div class="">
+    <%= link_to edit_dashboard_path(@dashboard, params: variable_params(@dashboard)) do %>
+      <button>Edit</button>
+    <% end %>
+    <%= link_to "Back", dashboards_path %>
+  </div>
+</div>
+
+<div style="margin-bottom: 60px;"></div>
+
+<% if @data_sources.any? { |ds| ds.cache_mode != "off" } %>
+  <p class="text-muted" style="float: right;">
+    Some queries may be cached
+    <%= link_to "Refresh", refresh_dashboard_path(@dashboard, params: variable_params(@dashboard)), method: :post %>
+  </p>
+<% end %>
+
+<% if @bind_vars.any? %>
+  <%= render partial: "blazer/variables", locals: {action: dashboard_path(@dashboard)} %>
+<% else %>
+  <div style="padding-bottom: 15px;"></div>
+<% end %>
+
+<% @queries.each_with_index do |query, i| %>
+  <div class="chart-container">
+    <h4><%= link_to query.friendly_name, query_path(query, params: variable_params(query)), target: "_blank" %></h4>
+    <div id="chart-<%= i %>" class="chart">
+      <% if @query_errors[query.id] %>
+        <div class="alert alert-danger">
+          <%= @query_errors[query.id] %>
+        </div>
+      <% else %>
+        <p class="text-muted">Loading...</p>
+      <% end %>
+    </div>
+  </div>
+  <% unless @query_errors[query.id] %>
+    <%= javascript_tag nonce: true do %>
+      <% data = {statement: query.statement, query_id: query.id, data_source: query.data_source || Blazer.data_sources.keys.first, variables: variable_params(query), only_chart: true} %>
+      <% data.merge!(cohort_period: params[:cohort_period]) if params[:cohort_period] %>
+      <%= blazer_js_var "data", data %>
+
+      runQuery(data, function (data) {
+        $("#chart-<%= i %>").html(data)
+        $("#chart-<%= i %> table").stupidtable(stupidtableCustomSettings)
+      }, function (message) {
+        $("#chart-<%= i %>").addClass("query-error").html(message)
+      });
+    <% end %>
+  <% end %>
+<% end %>
+

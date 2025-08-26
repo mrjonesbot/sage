@@ -1,0 +1,44 @@
+<%= turbo_frame_tag "messages-content" do %>
+  <% if @messages.any? %>
+    <% if @pagy.next %>
+      <!-- Pagination trigger for loading older messages -->
+      <div data-sage--reverse-infinite-scroll-target="pagination" style="height: 1px;"></div>
+    <% end %>
+    
+    <% messages_grouped_by_day(@messages).each do |date, messages| %>
+      <div class="day-separator center-align small-margin">
+        <small class="secondary-text bold"><%= format_message_date(date) %></small>
+      </div>
+      <%= render partial: 'sage/queries/message', collection: messages %>
+    <% end %>
+  <% else %>
+    <!-- Empty state -->
+    <div class="center-align padding" style="margin-top: 40px;">
+      <i class="large" style="font-size: 3rem; color: var(--surface-variant); margin-bottom: 16px;">💬</i>
+      <div class="medium-text secondary-text" style="margin-bottom: 8px;">No messages yet</div>
+      <small class="secondary-text">Start a conversation by asking a question below</small>
+    </div>
+  <% end %>
+  
+  <script>
+    // Scroll to bottom on initial load - only for page 1
+    <% if params[:page].blank? || params[:page].to_i == 1 %>
+      // Use multiple timeouts to ensure content is loaded
+      setTimeout(() => {
+        const messagesDiv = document.getElementById('<%= dom_id(@query, 'messages') %>');
+        if (messagesDiv) {
+          console.log("Scrolling to bottom, scrollHeight:", messagesDiv.scrollHeight);
+          messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+      }, 100);
+      
+      setTimeout(() => {
+        const messagesDiv = document.getElementById('<%= dom_id(@query, 'messages') %>');
+        if (messagesDiv) {
+          console.log("Final scroll to bottom, scrollHeight:", messagesDiv.scrollHeight);
+          messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+      }, 500);
+    <% end %>
+  </script>
+<% end %>

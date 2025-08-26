@@ -1,0 +1,15 @@
+<%= turbo_stream.append "entries" do %>
+  <% if @pagy.next %>
+    <!-- Add pagination trigger for next page -->
+    <div data-sage--reverse-infinite-scroll-target="pagination" style="height: 1px;"></div>
+  <% end %>
+
+  <div data-page="<%= @pagy.page %>">
+    <% messages_grouped_by_day(@messages).each do |date, messages| %>
+      <div class="day-separator center-align small-margin">
+        <small class="secondary-text bold"><%= format_message_date(date) %></small>
+      </div>
+      <%= render partial: 'sage/queries/message', collection: messages %>
+    <% end %>
+  </div>
+<% end %>

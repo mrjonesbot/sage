@@ -29,41 +29,44 @@ Rails.application.configure do
   config.cache_store = :memory_store
 
   # Store uploaded files on the local file system (see config/storage.yml for options).
-  config.active_storage.service = :local
+  # config.active_storage.service = :local
 
   # Don't care if the mailer can't send.
-  config.action_mailer.raise_delivery_errors = false
+  # config.action_mailer.raise_delivery_errors = false
 
   # Make template changes take effect immediately.
-  config.action_mailer.perform_caching = false
+  # config.action_mailer.perform_caching = false
 
   # Set localhost to be used by links generated in mailer templates.
   config.action_mailer.default_url_options = { host: "localhost", port: 3000 }
+  
+  # Use test delivery method to avoid trying to send real emails
+  config.action_mailer.delivery_method = :test
 
   # Print deprecation notices to the Rails logger.
-  config.active_support.deprecation = :log
+  # config.active_support.deprecation = :log
 
   # Raise an error on page load if there are pending migrations.
-  config.active_record.migration_error = :page_load
+  # config.active_record.migration_error = :page_load
 
   # Highlight code that triggered database queries in logs.
-  config.active_record.verbose_query_logs = true
+  # config.active_record.verbose_query_logs = true
 
   # Append comments with runtime information tags to SQL queries in logs.
-  config.active_record.query_log_tags_enabled = true
+  # config.active_record.query_log_tags_enabled = true
 
   # Highlight code that enqueued background job in logs.
-  config.active_job.verbose_enqueue_logs = true
+  # config.active_job.verbose_enqueue_logs = true
 
   # Raises error for missing translations.
   # config.i18n.raise_on_missing_translations = true
 
   # Annotate rendered view with file names.
-  config.action_view.annotate_rendered_view_with_filenames = true
+  # config.action_view.annotate_rendered_view_with_filenames = true
 
   # Uncomment if you wish to allow Action Cable access from any origin.
   # config.action_cable.disable_request_forgery_protection = true
 
   # Raise error when a before_action's only/except options reference missing actions.
-  config.action_controller.raise_on_missing_callback_actions = true
+  # config.action_controller.raise_on_missing_callback_actions = true
 end

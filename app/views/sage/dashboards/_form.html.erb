@@ -1,0 +1,50 @@
+<%= form_for @dashboard, url: (@dashboard.persisted? ? dashboard_path(@dashboard, params: variable_params(@dashboard)) : dashboards_path(params: variable_params(@dashboard))), html: {class: "small-form", data: {controller: "sage--dashboard", "sage--dashboard-queries-value": (@queries || @dashboard.dashboard_queries.order(:position).map(&:query)).to_json, action: "select:change->sage--dashboard#addQuery"}} do |f| %>
+  <% if @dashboard.errors.any? %>
+    <div class="error-container"><%= @dashboard.errors.full_messages.first %></div>
+  <% end %>
+
+  <div class="field border label">
+    <input type='text' name='dashboard[name]' id='dashboard_name' value="<%= @dashboard.name %>">
+    <label>Name</label>
+  </div>
+
+  <div class="grid">
+    <div class="s6">
+      <fieldset>
+        <legend>Add Chart</legend>
+        <div data-controller="sage--select" 
+             data-sage--select-options-value="<%= Blazer::Query.active.named.order(:name).select("id, name").map { |q| {text: q.name, value: q.id} }.to_json %>"
+             data-sage--select-placeholder-value="Select chart">
+          <div class="field label border select-container">
+            <input type="text" 
+                   data-sage--select-target="input" 
+                   data-action="input->sage--select#search focus->sage--select#focus blur->sage--select#blur"
+                   autocomplete="off"
+                   placeholder=" ">
+            <label>Search charts</label>
+            <div data-sage--select-target="dropdown" class="select-dropdown hidden">
+            </div>
+          </div>
+        </div>
+      </fieldset>
+
+      <p style="padding-bottom: 140px;">
+      <% if @dashboard.persisted? %>
+        <%= link_to "Delete", dashboard_path(@dashboard), method: :delete, "data-confirm" => "Are you sure?", class: "btn btn-danger" %>
+      <% end %>
+      <button type='submit'>
+        Save
+      </button>
+      <%= link_to "Back", :back, class: "" %>
+      </p>
+    </div>
+
+    <div class="s6">
+      <fieldset data-sage--dashboard-target="queryList" style="display: none; opacity: 1 !important;">
+        <legend style="opacity: 1 !important; color: black !important;">Selected Charts</legend>
+        <nav id="queries" style="display: flex; flex-direction: column; gap: 8px; opacity: 1 !important;">
+        </nav>
+      </fieldset>
+    </div>
+  </div>
+<% end %>

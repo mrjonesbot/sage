@@ -17,11 +17,27 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
-    <%# Includes all stylesheet files in app/assets/stylesheets %>
-    <%= stylesheet_link_tag :app %>
+    <%= stylesheet_link_tag "css-zero/reset", "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "css-zero/variables", "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "css-zero/utilities", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
   </head>
 
-  <body>
-    <%= yield %>
+  <body class="header-layout">
+    <header id="header">
+      <div class="container">
+        <h1 class="font-bold text-2xl">Dummy</h1>
+      </div>
+    </header>
+
+    <main id="main">
+      <% if notice.present? %>
+        <%= tag.div notice, popover: "manual", class: "flash", style: "--flash-position: 5rem", data: { controller: "element-removal", action: "animationend->element-removal#remove", role: "alert" } %>
+      <% end %>
+      <div class="container">
+        <%= yield %>
+      </div>
+    </main>
   </body>
 </html>
