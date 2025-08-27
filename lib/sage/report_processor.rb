@@ -147,8 +147,15 @@ module Sage
           "sql": "The complete SQL query statement"
         }
 
+        CLARIFICATION REQUIRED: If you're unsure how to query based on certain criteria:
+        - Return a summary asking for clarification
+        - Set sql to null
+        - Example: {"summary": "I need clarification on what you mean by 'activated accounts'. Do you mean users with a specific status, users who have logged in, or users with a certain field set?", "sql": null}
+
         IMPORTANT:#{' '}
         - Always return the COMPLETE query, not just the changes
+        - When producing SQL, exclude ALL comments and extraneous characters - the SQL will be immediately executed against a database
+        - Format SQL to be human readable, per SQL writing best practices, but still executable
         - When modifying existing queries, preserve the original intent while incorporating the requested changes
         - If the user asks for adjustments (e.g., "add a filter", "group by X", "sort differently"), modify the most recent query
         - If the user asks something completely new, create a fresh query
@@ -156,14 +163,34 @@ module Sage
         Guidelines:
         - Write efficient, readable SQL using #{database_type}-specific syntax
         - Use meaningful table aliases and column names
-        - Include comments in complex queries
+        - Do NOT include comments in SQL queries - they will be executed directly
         - Prefer JOINs over subqueries when appropriate
         - Consider performance implications for large datasets
-        - Use the available model scopes as reference for common query patterns
+        - ROLE HANDLING: When dealing with "roles" (e.g., "candidates", "employers", synonyms of "users"):
+          * ALWAYS check the users model/table/scopes first to understand how roles are established
+          * Look for role-related columns, scopes, or associations in the users table
+          * Map role-related terms to the actual implementation in the database
+        - SCOPE PRIORITIZATION: ALWAYS prioritize matching user requests to available model scopes
+          * FIRST check if any existing scopes match the user's intent
+          * Use scopes as the PRIMARY source for query patterns
+          * Only write custom SQL when no appropriate scope exists
+          * Analyze the intent behind user queries and map them to corresponding scopes
+          * When users describe filters or conditions, identify matching scope patterns
+          * Example: if user asks for "recent items", look for scopes like "recent", "latest", or time-based scopes
+        - JSONB COLUMNS: NEVER guess at JSONB column keys or values
+          * Only query JSONB fields that are explicitly defined in scopes or schema documentation
+          * If JSONB structure is unknown, do NOT attempt to query specific keys
+          * Avoid assumptions about JSONB content unless explicitly documented
+        - PRESENCE CHECKS: For presence/existence checks:
+          * Use "IS NOT NULL" or "IS NULL" for presence/absence checks
+          * Avoid using literal values like 'true' or specific strings unless explicitly required
+          * For boolean presence, check for NOT NULL rather than = true
+          * Example: Use "activated_at IS NOT NULL" instead of "activated = 'true'"
         - Ensure all table and column names match the schema exactly
-        - Handle NULL values appropriately
+        - Handle NULL values appropriately (prefer IS NULL/IS NOT NULL for presence checks)
         - Use proper data type casting when needed
         - Follow #{database_type} best practices and syntax conventions
+        - NEVER make assumptions about data structure - use only what's documented in schema and scopes
       INSTRUCTION
 
       # Add current query as baseline context
@@ -194,9 +221,22 @@ module Sage
 
       prompt_parts << "\n\n## QUERY GENERATION RULES"
       prompt_parts << "1. Match table and column names EXACTLY as shown in the schema"
-      prompt_parts << "2. Use the scope patterns as guidance for common filters and joins"
-      prompt_parts << "3. Generate ONE query that best answers the user's request"
-      prompt_parts << "4. Optimize for clarity and performance"
+      prompt_parts << "2. NO COMMENTS OR NEWLINES in SQL - output will be executed directly against database"
+      prompt_parts << "3. SCOPE FIRST: ALWAYS prioritize using available scopes over custom SQL"
+      prompt_parts << "   - Check ALL available scopes before writing custom conditions"
+      prompt_parts << "   - Map user language directly to scope names when possible"
+      prompt_parts << "4. JSONB HANDLING: NEVER guess at JSONB structure"
+      prompt_parts << "   - Only use JSONB keys that are explicitly documented in scopes or schema"
+      prompt_parts << "   - If unsure about JSONB structure, avoid querying it"
+      prompt_parts << "5. PRESENCE/ABSENCE CHECKS:"
+      prompt_parts << "   - Use IS NOT NULL for presence (not = 'true' or = true)"
+      prompt_parts << "   - Use IS NULL for absence"
+      prompt_parts << "   - Example: 'activated users' → 'activated_at IS NOT NULL'"
+      prompt_parts << "6. ROLE HANDLING: When users mention roles like 'candidates' or 'employers':"
+      prompt_parts << "   - Check the users table/model/scopes first to understand role implementation"
+      prompt_parts << "   - Map role terms to actual database structure (columns, associations, etc.)"
+      prompt_parts << "7. Generate ONE query that best answers the user's request"
+      prompt_parts << "8. NEVER make assumptions - use only documented schema and scopes"
 
       prompt_parts.join("\n")
     end

@@ -48,7 +48,8 @@
     <%= f.hidden_field :data_source, value: query.data_source || Blazer.data_sources.keys.first %>
     <div id="editor-container" style="position: relative; overflow: hidden;">
       <div id="editor" style="height: 200px;" data-initial-content="<%= html_escape(local_assigns[:statement] || query.statement) %>"><%= local_assigns[:statement] || query.statement %></div>
-      <div style="position: absolute; bottom: 10px; right: 15px; z-index: 1000; border-radius: 4px; padding: 5px;">
+      <div style="position: absolute; bottom: 10px; right: 15px; z-index: 1000; border-radius: 4px; padding: 5px; display: flex; gap: 8px;">
+        <button type='button' onclick="formatSQL()" class="secondary">Format</button>
         <button type='submit' class="<%= 'glow-button' if local_assigns[:statement].present? %>">Run</button>
       </div>
     </div>
@@ -56,6 +57,115 @@
 </div>
 
 <%= javascript_tag nonce: true do %>
+  function formatSQL() {
+    if (!window.aceEditor) return;
+    
+    const sql = window.aceEditor.getValue();
+    const formatted = formatSQLString(sql);
+    window.aceEditor.setValue(formatted, -1);
+  }
+  
+  function formatSQLString(sql) {
+    // SQL keywords that should be uppercase and on new lines
+    const mainKeywords = ['SELECT', 'FROM', 'WHERE', 'GROUP BY', 'HAVING', 'ORDER BY', 'LIMIT', 'OFFSET', 
+                         'INSERT', 'UPDATE', 'DELETE', 'CREATE', 'ALTER', 'DROP', 'TRUNCATE',
+                         'UNION', 'UNION ALL', 'INTERSECT', 'EXCEPT', 'WITH'];
+    
+    const joinKeywords = ['LEFT JOIN', 'RIGHT JOIN', 'INNER JOIN', 'FULL OUTER JOIN', 'CROSS JOIN', 'JOIN', 'ON'];
+    
+    const otherKeywords = ['AND', 'OR', 'NOT', 'IN', 'EXISTS', 'BETWEEN', 'LIKE', 'IS', 'NULL', 
+                          'CASE', 'WHEN', 'THEN', 'ELSE', 'END', 'AS', 'DISTINCT', 'ALL',
+                          'ASC', 'DESC', 'CAST', 'COUNT', 'SUM', 'AVG', 'MIN', 'MAX',
+                          'COALESCE', 'NULLIF', 'DATE_TRUNC', 'EXTRACT', 'SUBSTRING',
+                          'CONCAT', 'LENGTH', 'LOWER', 'UPPER', 'TRIM', 'REPLACE'];
+    
+    // Preserve string literals and comments
+    const preservedStrings = [];
+    let preservedIndex = 0;
+    
+    // Replace strings with placeholders
+    sql = sql.replace(/'([^']|'')*'/g, (match) => {
+      preservedStrings.push(match);
+      return `__PRESERVED_STRING_${preservedIndex++}__`;
+    });
+    
+    // Replace comments with placeholders  
+    sql = sql.replace(/--[^\n]*/g, (match) => {
+      preservedStrings.push(match);
+      return `__PRESERVED_STRING_${preservedIndex++}__`;
+    });
+    
+    sql = sql.replace(/\/\*[\s\S]*?\*\//g, (match) => {
+      preservedStrings.push(match);
+      return `__PRESERVED_STRING_${preservedIndex++}__`;
+    });
+    
+    // Remove extra whitespace and normalize spaces
+    sql = sql.replace(/\s+/g, ' ').trim();
+    
+    // Format main keywords - add newline before them
+    mainKeywords.forEach(keyword => {
+      const regex = new RegExp('\\b' + keyword + '\\b', 'gi');
+      sql = sql.replace(regex, '\n' + keyword);
+    });
+    
+    // Format JOIN keywords - add newline before them
+    joinKeywords.forEach(keyword => {
+      const regex = new RegExp('\\b' + keyword + '\\b', 'gi');
+      sql = sql.replace(regex, '\n' + keyword);
+    });
+    
+    // Make all SQL keywords uppercase (but not the preserved strings)
+    [...mainKeywords, ...joinKeywords, ...otherKeywords].forEach(keyword => {
+      const regex = new RegExp('\\b' + keyword + '\\b', 'gi');
+      sql = sql.replace(regex, keyword);
+    });
+    
+    // Format commas in SELECT list - add newline and indent after comma
+    sql = sql.replace(/SELECT\s+(.*?)(?=\nFROM|\nWHERE|\nGROUP|\nHAVING|\nORDER|\nLIMIT|$)/gs, (match, selectList) => {
+      // Only format if there are multiple items
+      if (selectList.includes(',')) {
+        selectList = selectList.replace(/,\s*/g, ',\n    ');
+        return 'SELECT\n    ' + selectList.trim();
+      }
+      return 'SELECT ' + selectList.trim();
+    });
+    
+    // Format AND/OR in WHERE clause - put on new line with indent
+    sql = sql.replace(/\n(WHERE|HAVING)\s+(.*?)(?=\n(?:GROUP|ORDER|LIMIT|FROM|SELECT|$))/gs, (match, keyword, condition) => {
+      condition = condition.replace(/\s+(AND|OR)\s+/gi, '\n  $1 ');
+      return '\n' + keyword + ' ' + condition;
+    });
+    
+    // Add indentation for subqueries
+    sql = sql.replace(/\((\s*SELECT[\s\S]*?)\)/g, (match, subquery) => {
+      const indentedSubquery = subquery.split('\n').map(line => '  ' + line).join('\n');
+      return '(\n' + indentedSubquery + '\n)';
+    });
+    
+    // Clean up multiple consecutive newlines
+    sql = sql.replace(/\n\s*\n/g, '\n');
+    
+    // Restore preserved strings
+    preservedStrings.forEach((str, index) => {
+      sql = sql.replace(`__PRESERVED_STRING_${index}__`, str);
+    });
+    
+    // Remove leading newline if present
+    sql = sql.replace(/^\n+/, '');
+    
+    // Ensure consistent spacing around operators
+    sql = sql.replace(/\s*=\s*/g, ' = ');
+    sql = sql.replace(/\s*<>\s*/g, ' <> ');
+    sql = sql.replace(/\s*!=\s*/g, ' != ');
+    sql = sql.replace(/\s*<=\s*/g, ' <= ');
+    sql = sql.replace(/\s*>=\s*/g, ' >= ');
+    sql = sql.replace(/\s*<\s*/g, ' < ');
+    sql = sql.replace(/\s*>\s*/g, ' > ');
+    
+    return sql;
+  }
+  
   function initializeEditor() {
   // Destroy existing editor if it exists
   if (window.aceEditor) {

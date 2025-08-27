@@ -40,7 +40,7 @@
               <%= link_to dashboard.name, dashboard_path(dashboard), class: "text-decoration-none" %>
             </td>
             <% if Blazer.user_class %>
-              <td><%= dashboard.creator %></td>
+              <td><%= dashboard.creator.name %></td>
             <% end %>
           </tr>
         <% end %>

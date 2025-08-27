@@ -15,7 +15,7 @@
       <%= label_tag "query[question]", "Your Question", class: "form-label" %>
       <%= text_area_tag "query[question]", nil, 
           class: "form-control", 
-          rows: 3,
+          rows: 8,
           placeholder: "e.g., Show me the top 10 customers by revenue in the last 30 days",
           required: true,
           data: { sage_target: "question" } %>
@@ -100,12 +100,30 @@
     font-size: 14px;
     border: 1px solid #ddd;
     border-radius: 4px;
+    background-color: #fff;
+    color: #333;
   }
 
   .form-control:focus {
     outline: none;
     border-color: #4CAF50;
     box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+  }
+
+  /* Dark mode styles for form controls */
+  body.dark .form-control {
+    background-color: #2a2a2a;
+    color: #e6e6e6;
+    border-color: #444;
+  }
+
+  body.dark .form-control::placeholder {
+    color: #888;
+  }
+
+  body.dark .form-control:focus {
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.3);
   }
 
   .form-actions {
@@ -142,6 +160,15 @@
   .text-muted {
     color: #666;
     font-size: 14px;
+  }
+
+  /* Dark mode styles for labels and helper text */
+  body.dark .form-label {
+    color: #e6e6e6;
+  }
+
+  body.dark .text-muted {
+    color: #999;
   }
 
   .schema-card {
