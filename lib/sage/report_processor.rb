@@ -181,9 +181,33 @@ module Sage
         data_source = Blazer.data_sources["main"]
         if data_source && data_source.respond_to?(:schema)
           schema_info = data_source.schema
-          prompt_parts << "```"
-          prompt_parts << schema_info.to_s
-          prompt_parts << "```"
+
+          # Format the schema array into readable text
+          if schema_info.is_a?(Array)
+            schema_info.each do |table_info|
+              next unless table_info.is_a?(Hash)
+
+              schema_name = table_info[:schema] || "public"
+              table_name = table_info[:table]
+              columns = table_info[:columns] || []
+
+              prompt_parts << "\n### Table: `#{schema_name}.#{table_name}`"
+              prompt_parts << "Columns:"
+
+              columns.each do |column|
+                if column.is_a?(Hash)
+                  col_name = column[:name]
+                  data_type = column[:data_type]
+                  prompt_parts << "  - `#{col_name}` (#{data_type})"
+                end
+              end
+            end
+          else
+            # Fallback to original behavior if schema is not in expected format
+            prompt_parts << "```"
+            prompt_parts << schema_info.to_s
+            prompt_parts << "```"
+          end
         end
       rescue => e
         Rails.logger.warn "Could not load database schema: #{e.message}"
