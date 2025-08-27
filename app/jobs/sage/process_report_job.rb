@@ -136,20 +136,30 @@ module Sage
 
       # Base instruction optimized for LLM
       prompt_parts << <<~INSTRUCTION
-        You are an expert SQL analyst helping users query their database.
+        You are an expert SQL analyst helping users iteratively refine their database queries.
 
         DATABASE TYPE: #{database_type}
 
         Your task:
         1. Analyze the user's natural language request
-        2. Generate an appropriate SQL query for #{database_type}
-        3. Provide a clear explanation of what the query does
+        2. Determine if you should:
+           a) Modify the most recent SQL query (from Previous Context if available)
+           b) Modify the baseline query (from Current Query section)
+           c) Create an entirely new query if the request is unrelated
+        3. Generate the appropriate SQL query for #{database_type}
+        4. Provide a clear explanation of what changed and why
 
         Response format (STRICT JSON):
         {
-          "summary": "A clear, concise explanation of what this query retrieves and why it answers the user's question",
-          "sql": "The SQL query statement"
+          "summary": "Explain what this query does and what changes were made from the previous version (if any)",
+          "sql": "The complete SQL query statement"
         }
+
+        IMPORTANT: 
+        - Always return the COMPLETE query, not just the changes
+        - When modifying existing queries, preserve the original intent while incorporating the requested changes
+        - If the user asks for adjustments (e.g., "add a filter", "group by X", "sort differently"), modify the most recent query
+        - If the user asks something completely new, create a fresh query
 
         Guidelines:
         - Write efficient, readable SQL using #{database_type}-specific syntax
