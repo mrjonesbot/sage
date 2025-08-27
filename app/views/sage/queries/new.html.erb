@@ -10,7 +10,7 @@
     <h5>What are you curious about?</h5>
   </div>
 
-  <%= form_with url: queries_path, method: :post, local: false, scope: :query, data: { turbo_frame: "query_result" } do |f| %>
+  <%= form_with url: queries_path, method: :post, local: true, scope: :query do |f| %>
     <div class="form-group">
       <%= label_tag "query[question]", "Your Question", class: "form-label" %>
       <%= text_area_tag "query[question]", nil, 

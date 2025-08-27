@@ -57,14 +57,51 @@ module Sage
     end
 
     def create
-      @query = Blazer::Query.new(query_params)
-      @query.creator = blazer_user if @query.respond_to?(:creator)
-      @query.status = "active" if @query.respond_to?(:status)
+      # Handle the new Sage form submission with question parameter
+      if params[:query][:question].present?
+        question = params[:query][:question]
 
-      if @query.save
-        redirect_to query_path(@query, params: variable_params(@query))
+        # Create query with placeholder name and statement
+        @query = Blazer::Query.new(
+          name: "Sage Query - #{Time.current.strftime('%Y-%m-%d %H:%M')}",
+          statement: "-- Processing your question...\n-- #{question}",
+          data_source: Blazer.data_sources.keys.first
+        )
+        @query.creator = blazer_user if @query.respond_to?(:creator)
+        @query.status = "active" if @query.respond_to?(:status)
+
+        if @query.save
+          # Create associated Sage::Message record with the user's question
+          message = @query.messages.create!(
+            body: question,
+            creator: (blazer_user if ::Blazer.user_class)
+          )
+
+          # Generate a unique stream target ID for real-time updates
+          stream_target_id = "message_#{SecureRandom.hex(8)}"
+
+          # Kick off the ProcessReportJob with 1-second delay
+          Sage::ProcessReportJob.set(wait: 1.second).perform_later(
+            question,
+            query_id: @query.id,
+            stream_target_id: stream_target_id
+          )
+
+          redirect_to edit_query_path(@query)
+        else
+          render_errors @query
+        end
       else
-        render_errors @query
+        # Handle traditional Blazer query creation
+        @query = Blazer::Query.new(query_params)
+        @query.creator = blazer_user if @query.respond_to?(:creator)
+        @query.status = "active" if @query.respond_to?(:status)
+
+        if @query.save
+          redirect_to query_path(@query, params: variable_params(@query))
+        else
+          render_errors @query
+        end
       end
     end
 
@@ -384,7 +421,7 @@ module Sage
     end
 
     def query_params
-      params.require(:query).permit(:name, :description, :statement, :data_source)
+      params.require(:query).permit(:name, :description, :statement, :data_source, :question)
     end
 
     def blazer_params
