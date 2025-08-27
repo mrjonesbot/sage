@@ -14,8 +14,11 @@ module Sage
 
     def process
       response = generate_llm_response
+      Rails.logger.info "LLM Response: #{response.inspect}"
+      Rails.logger.info "LLM Response content: #{response.content.inspect}"
       @raw_response_content = response.content
       parsed_response = parse_response(response)
+      Rails.logger.info "Parsed response: #{parsed_response.inspect}"
 
       {
         summary: parsed_response[:summary],

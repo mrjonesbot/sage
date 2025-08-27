@@ -26,10 +26,12 @@ module Sage
       )
 
       result = processor.process
+      Rails.logger.info "ProcessReportJob result: #{result.inspect}"
       summary = result[:summary]
       sql = result[:sql]
 
-      puts "SUMMARY: #{summary}"
+      Rails.logger.info "Summary: #{summary}"
+      Rails.logger.info "SQL: #{sql}"
       # Handle empty summary
       summary = "I couldn't generate a response. Please try again." if summary.blank?
 
