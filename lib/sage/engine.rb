@@ -26,25 +26,25 @@ module Sage
 
     initializer "sage.ransack_helpers", after: "ransack" do
       # Ensure Ransack is fully loaded with its helpers
-      require 'ransack' unless defined?(::Ransack)
-      
+      require "ransack" unless defined?(::Ransack)
+
       # Load Ransack's ActionView extensions which include the helpers
       if defined?(::Ransack)
-        require 'ransack/helpers/form_helper' if !defined?(Ransack::Helpers)
+        require "ransack/helpers/form_helper" if !defined?(Ransack::Helpers)
       end
-      
+
       ActiveSupport.on_load(:action_controller_base) do
         if defined?(Ransack::Helpers::FormHelper)
           helper Ransack::Helpers::FormHelper
         end
       end
-      
+
       ActiveSupport.on_load(:action_view) do
         if defined?(Ransack::Helpers::FormHelper)
           include Ransack::Helpers::FormHelper
         end
       end
-      
+
       # Also add to our base controller immediately if it's loaded
       if defined?(Sage::BaseController) && defined?(Ransack::Helpers::FormHelper)
         Sage::BaseController.helper Ransack::Helpers::FormHelper
@@ -186,8 +186,8 @@ module Sage
 
     config.to_prepare do
       # Ensure Ransack is loaded
-      require 'ransack' if defined?(::Ransack).nil?
-      
+      require "ransack" if defined?(::Ransack).nil?
+
       # Ensure we can access Blazer's models and controllers
       Dir.glob(Rails.root.join("app/models/blazer/*.rb")).each { |file| require_dependency file }
 
@@ -201,10 +201,10 @@ module Sage
         unless Blazer::Query.respond_to?(:ransack)
           Blazer::Query.send(:extend, Ransack::Adapters::ActiveRecord::Base)
         end
-        
+
         Blazer::Query.class_eval do
           has_many :messages, class_name: "Sage::Message", foreign_key: :blazer_query_id, dependent: :destroy
-          
+
           # Define ransackable attributes if not already defined
           unless respond_to?(:ransackable_attributes)
             def self.ransackable_attributes(auth_object = nil)

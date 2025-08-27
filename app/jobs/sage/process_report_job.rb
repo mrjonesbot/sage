@@ -91,7 +91,7 @@ module Sage
         "statements",
         target: dom_id(query, "statement-box"),
         partial: "sage/queries/statement_box",
-        locals: { query: query, statement: sql }
+        locals: { query: query, statement: sql, form_url: run_queries_path }
       )
 
       # Auto-submit the form after the statement_box renders

@@ -29,7 +29,20 @@
 </style>
 
 <div id=<%= dom_id(query, 'statement-box') %> class='' style="position: relative;">
-  <%= form_with url: sage.run_queries_path, method: :post do |f| %>
+  <% 
+    # Handle different contexts - job vs regular view rendering
+    form_url = if local_assigns[:form_url]
+      local_assigns[:form_url]
+    elsif defined?(sage) && sage.respond_to?(:run_queries_path)
+      sage.run_queries_path
+    elsif respond_to?(:run_queries_path)
+      run_queries_path
+    else
+      # Fallback to engine route
+      Sage::Engine.routes.url_helpers.run_queries_path
+    end
+  %>
+  <%= form_with url: form_url, method: :post do |f| %>
     <%= f.hidden_field :statement, id: 'query_statement' %>
     <%= f.hidden_field :query_id, value: query.id %>
     <%= f.hidden_field :data_source, value: query.data_source || Blazer.data_sources.keys.first %>
