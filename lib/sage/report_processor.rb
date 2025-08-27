@@ -1,4 +1,6 @@
 require "ruby_llm"
+require_relative "database_schema_context"
+require_relative "model_scopes_context"
 
 module Sage
   class ReportProcessor
@@ -28,6 +30,14 @@ module Sage
 
     def system_prompt
       build_system_prompt
+    end
+
+    def database_schema_context
+      Sage::DatabaseSchemaContext.new.build_context
+    end
+
+    def model_scopes_context
+      Sage::ModelScopesContext.new.build_context
     end
 
     private
@@ -175,107 +185,12 @@ module Sage
       end
 
       # Add database schema
-      prompt_parts << "\n\n## DATABASE SCHEMA\n"
-      prompt_parts << "Available tables and their columns (use these exact names in your queries):\n"
-      begin
-        data_source = Blazer.data_sources["main"]
-        if data_source && data_source.respond_to?(:schema)
-          schema_info = data_source.schema
-
-          # Format the schema array into readable text
-          if schema_info.is_a?(Array)
-            schema_info.each do |table_info|
-              next unless table_info.is_a?(Hash)
-
-              schema_name = table_info[:schema] || "public"
-              table_name = table_info[:table]
-              columns = table_info[:columns] || []
-
-              prompt_parts << "\n### Table: `#{schema_name}.#{table_name}`"
-              prompt_parts << "Columns:"
-
-              columns.each do |column|
-                if column.is_a?(Hash)
-                  col_name = column[:name]
-                  data_type = column[:data_type]
-                  prompt_parts << "  - `#{col_name}` (#{data_type})"
-                end
-              end
-            end
-          else
-            # Fallback to original behavior if schema is not in expected format
-            prompt_parts << "```"
-            prompt_parts << schema_info.to_s
-            prompt_parts << "```"
-          end
-        end
-      rescue => e
-        Rails.logger.warn "Could not load database schema: #{e.message}"
-      end
+      schema_context = database_schema_context
+      prompt_parts << schema_context if schema_context.present?
 
       # Add model scopes from host application
-      prompt_parts << "\n\n## REFERENCE: COMMON QUERY PATTERNS\n"
-      prompt_parts << "These ActiveRecord scopes show common query patterns used in the application:"
-
-      # Get all ActiveRecord models from the host application
-      # Safely attempt to eager load, but continue if there are issues
-      begin
-        Rails.application.eager_load! if Rails.env.development?
-      rescue Zeitwerk::NameError => e
-        Rails.logger.warn "Could not eager load all files: #{e.message}"
-      end
-
-      models_with_scopes = []
-
-      ActiveRecord::Base.descendants.each do |model|
-        # Skip engine models and Blazer models
-        next if model.name&.start_with?("Sage::", "Blazer::")
-        next if model.abstract_class?
-
-        # Get all scopes defined on the model
-        scopes = model.scopes.keys rescue []
-
-        if scopes.any?
-          model_info = {
-            name: model.name,
-            table: model.table_name,
-            scopes: []
-          }
-          scopes.each do |scope_name|
-            # Try to get scope SQL if possible
-            begin
-              # For scopes without arguments, try to get the SQL
-              if model.method(scope_name).arity == 0
-                scope_sql = model.send(scope_name).to_sql rescue nil
-                if scope_sql
-                  # Clean up the SQL for readability
-                  cleaned_sql = scope_sql.gsub(/^SELECT .* FROM/, "SELECT * FROM")
-                  model_info[:scopes] << "#{scope_name}: #{cleaned_sql}"
-                else
-                  model_info[:scopes] << scope_name.to_s
-                end
-              else
-                # Scope requires arguments
-                model_info[:scopes] << "#{scope_name} (parameterized)"
-              end
-            rescue => e
-              model_info[:scopes] << scope_name.to_s
-            end
-          end
-
-          models_with_scopes << model_info
-        end
-      end
-
-      # Format the model scopes nicely
-      if models_with_scopes.any?
-        models_with_scopes.each do |model_info|
-          prompt_parts << "\n### #{model_info[:name]} (table: `#{model_info[:table]}`)"
-          model_info[:scopes].each do |scope|
-            prompt_parts << "- #{scope}"
-          end
-        end
-      end
+      scopes_context = model_scopes_context
+      prompt_parts << scopes_context if scopes_context.present?
 
       prompt_parts << "\n\n## QUERY GENERATION RULES"
       prompt_parts << "1. Match table and column names EXACTLY as shown in the schema"
@@ -285,6 +200,7 @@ module Sage
 
       prompt_parts.join("\n")
     end
+
 
     def detect_database_type
       adapter_name = ActiveRecord::Base.connection.adapter_name.downcase
