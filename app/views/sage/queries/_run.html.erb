@@ -1,6 +1,25 @@
 <%= turbo_frame_tag dom_id(@query, 'results') do %>
   <% if @error %>
-    <div class="alert alert-danger"><%= @error.first(200) %></div>
+    <div style="display: flex; justify-content: center; align-items: center; min-height: 400px; padding: 40px 20px;">
+      <div style="text-align: center; max-width: 600px;">
+        <div style="margin-bottom: 20px;">
+          <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="opacity: 0.5;">
+            <circle cx="12" cy="12" r="10" stroke="#dc3545" stroke-width="2"/>
+            <path d="M12 8V12" stroke="#dc3545" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="12" cy="16" r="1" fill="#dc3545"/>
+          </svg>
+        </div>
+        <h3 style="color: #dc3545; margin-bottom: 15px; font-weight: 500;">Query Error</h3>
+        <div style="background-color: #f8f9fa; border-left: 4px solid #dc3545; padding: 15px 20px; text-align: left; border-radius: 4px; margin-bottom: 20px;">
+          <code style="color: #495057; font-size: 14px; line-height: 1.5; word-break: break-word;">
+            <%= @error.first(500) %>
+          </code>
+        </div>
+        <p style="color: #6c757d; font-size: 14px; margin: 0;">
+          Please check your query syntax and try again.
+        </p>
+      </div>
+    </div>
   <% elsif !@success %>
     <% if @only_chart %>
       <p class="text-muted">Select variables</p>

@@ -164,17 +164,22 @@ module Sage
         - Follow #{database_type} best practices and syntax conventions
       INSTRUCTION
 
-      # Add historic messages as context
-      historic_messages = query.messages.order(:created_at).pluck(:body, :statement)
-      if historic_messages.any?
-        prompt_parts << "\n\n## CONVERSATION HISTORY\n"
-        prompt_parts << "Previous messages and SQL statements from this conversation for context:\n"
-        historic_messages.each_with_index do |(body, statement), index|
-          prompt_parts << "\n### Message #{index + 1}"
-          prompt_parts << "Question/Response: #{body}" if body.present?
-          prompt_parts << "SQL Statement: #{statement}" if statement.present?
-        end
-        prompt_parts << "\nUse this context to understand the conversation flow and build upon previous queries when appropriate.\n"
+      # Add current query as baseline context
+      if query.statement.present?
+        prompt_parts << "\n\n## CURRENT QUERY (BASELINE)\n"
+        prompt_parts << "The currently saved query that we're working with:\n"
+        prompt_parts << "```sql\n#{query.statement}\n```"
+        prompt_parts << "\nThis is the baseline query. You may modify or completely replace it based on the user's request.\n"
+      end
+
+      # Add latest message as context
+      latest_message = query.messages.order(:created_at).last
+      if latest_message
+        prompt_parts << "\n\n## PREVIOUS CONTEXT\n"
+        prompt_parts << "The most recent message from this conversation:\n"
+        prompt_parts << "\nPrevious response: #{latest_message.body}" if latest_message.body.present?
+        prompt_parts << "\nPrevious SQL: #{latest_message.statement}" if latest_message.statement.present?
+        prompt_parts << "\n\nConsider this context when generating your response.\n"
       end
       # Add database schema
       prompt_parts << "\n\n## DATABASE SCHEMA\n"
