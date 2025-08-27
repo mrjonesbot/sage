@@ -39,7 +39,7 @@
       
       <div class="grid">
         <% @schema.each_with_index do |table_info, index| %>
-          <div class="s12 m6 l3">
+          <div class="s12 m6 l4">
             <article class="schema-card">
               <h5 class="table-title">
                 <i class="small">table</i>
@@ -142,6 +142,26 @@
   .text-muted {
     color: #666;
     font-size: 14px;
+  }
+
+  .schema-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .table-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 5px;
+  }
+
+  .table-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 10px;
   }
 
 </style>
