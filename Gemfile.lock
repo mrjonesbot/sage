@@ -1,14 +1,14 @@
 PATH
   remote: .
   specs:
-    sage (0.1.0)
+    sage-rails (0.0.4)
       activerecord (>= 7.1)
       blazer (>= 3.0)
       importmap-rails
       pagy
       railties (>= 7.1)
       ransack
-      ruby_llm
+      ruby_llm (~> 1.6)
       ruby_llm-schema
       turbo-rails
 
@@ -270,7 +270,7 @@ DEPENDENCIES
   propshaft
   puma
   rubocop-rails-omakase
-  sage!
+  sage-rails!
   sqlite3
   stimulus-rails
 
