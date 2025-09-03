@@ -1,14 +1,14 @@
 PATH
   remote: .
   specs:
-    sage-rails (0.0.4)
-      activerecord (>= 7.1)
-      blazer (>= 3.0)
+    sage-rails (0.0.5)
+      activerecord
+      blazer
       importmap-rails
       pagy
-      railties (>= 7.1)
+      railties
       ransack
-      ruby_llm (~> 1.6)
+      ruby_llm
       ruby_llm-schema
       turbo-rails
 
