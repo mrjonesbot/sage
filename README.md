@@ -77,8 +77,6 @@ end
 
 Sage is built on top of Blazer and honors all existing Blazer configurations. 
 
-All Blazer features are fully supported:
-
 - **Database Setup**: Configure your database connections through Blazer
 - **Multiple Data Sources**: Switch between different databases seamlessly
 - **Smart Variables**: Use dynamic variables in generated queries
@@ -166,7 +164,7 @@ $ rails db:migrate
 $ rails server
 ```
 
-Visit http://localhost:3000/sage to see the engine in action.
+Visit http://localhost:3000/sage.
 
 ## Testing
 
