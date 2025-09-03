@@ -71,41 +71,71 @@ module Sage
 
     initializer "sage.ruby_llm" do
       RubyLLM.configure do |config|
-        config.default_model = "claude-3-opus-20240229"
+        # Determine provider and configure accordingly
+        provider = (Sage.configuration&.provider || :anthropic).to_sym
 
-        # Determine API key with priority:
-        # 1. Sage configuration (if explicitly set)
-        # 2. Rails credentials (anthropic.api_key)
-        # 3. Local .env file
-        # Never use system ENV
+        case provider
+        when :anthropic
+          config.default_model = Sage.configuration&.anthropic_model || "claude-3-opus-20240229"
 
-        api_key = nil
+          # Determine API key with priority:
+          # 1. Sage configuration (if explicitly set)
+          # 2. Rails credentials
+          # 3. Local .env file
+          api_key = nil
 
-        # Check if explicitly configured in Sage
-        if Sage.configuration && Sage.configuration.anthropic_api_key
-          api_key = Sage.configuration.anthropic_api_key
-        end
-
-        # Try Rails credentials
-        if api_key.nil? && defined?(Rails.application.credentials)
-          api_key = Rails.application.credentials.dig(:anthropic, :api_key)
-        end
-
-        # Try .env file
-        if api_key.nil? && defined?(Rails.root)
-          env_path = Rails.root.join(".env")
-          if File.exist?(env_path)
-            require "dotenv"
-            env_vars = Dotenv.parse(env_path)
-            api_key = env_vars["ANTHROPIC_API_KEY"]
+          # Check if explicitly configured in Sage
+          if Sage.configuration && Sage.configuration.anthropic_api_key
+            api_key = Sage.configuration.anthropic_api_key
           end
-        end
 
-        config.anthropic_api_key = api_key
+          # Try Rails credentials
+          if api_key.nil? && defined?(Rails.application.credentials)
+            api_key = Rails.application.credentials.dig(:anthropic, :api_key)
+          end
 
-        # Override model if configured
-        if Sage.configuration && Sage.configuration.anthropic_model
-          config.default_model = Sage.configuration.anthropic_model
+          # Try .env file
+          if api_key.nil? && defined?(Rails.root)
+            env_path = Rails.root.join(".env")
+            if File.exist?(env_path)
+              require "dotenv"
+              env_vars = Dotenv.parse(env_path)
+              api_key = env_vars["ANTHROPIC_API_KEY"]
+            end
+          end
+
+          config.anthropic_api_key = api_key
+
+        when :openai
+          config.default_model = Sage.configuration&.open_ai_model || "gpt-4"
+
+          # Determine API key with priority:
+          # 1. Sage configuration (if explicitly set)
+          # 2. Rails credentials
+          # 3. Local .env file
+          api_key = nil
+
+          # Check if explicitly configured in Sage
+          if Sage.configuration && Sage.configuration.open_ai_key
+            api_key = Sage.configuration.open_ai_key
+          end
+
+          # Try Rails credentials
+          if api_key.nil? && defined?(Rails.application.credentials)
+            api_key = Rails.application.credentials.dig(:openai, :api_key)
+          end
+
+          # Try .env file
+          if api_key.nil? && defined?(Rails.root)
+            env_path = Rails.root.join(".env")
+            if File.exist?(env_path)
+              require "dotenv"
+              env_vars = Dotenv.parse(env_path)
+              api_key = env_vars["OPENAI_API_KEY"]
+            end
+          end
+
+          config.openai_api_key = api_key
         end
       end
     end

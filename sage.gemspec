@@ -3,7 +3,7 @@ require_relative "lib/sage/version"
 Gem::Specification.new do |spec|
   spec.name          = "sage"
   spec.version       = Sage::VERSION
-  spec.summary       = "AI-powered SQL query generator for Blazer. Generate SQL queries from natural language questions."
+  spec.summary       = "LLM powered business intelligence. Build SQL reports using natural language."
   spec.homepage      = "https://github.com/mrjonesbot/sage"
   spec.license       = "MIT"
 

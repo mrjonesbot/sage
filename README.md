@@ -4,7 +4,7 @@
 
 **Natural language reporting to help your team build accurate reports, faster.**
 
-Sage is a Rails engine that enhances [Blazer](https://github.com/ankane/blazer) by adding an LLM interface to make data exploration accessible via natural language.
+Sage is a Rails engine built on top of the excellent [Blazer](https://github.com/ankane/blazer) gem, adding an LLM interface to make data exploration accessible via natural language.
 
 ## Installation
 
@@ -39,39 +39,22 @@ After installation, run the migrations:
 $ rails db:migrate
 ```
 
-Visit `/sage` in your application to start generating SQL queries from natural language!
-
 ## LLM Configuration
 
 Sage supports both Anthropic Claude and OpenAI models for SQL generation. Configure your preferred AI service in `config/initializers/sage.rb`:
 
-### Using Anthropic Claude (Recommended)
+### Using Anthropic
 
 ```ruby
 Sage.configure do |config|
-  config.ai_service = :anthropic
+  config.provider = :anthropic
   
-  # API Key Configuration (in order of precedence):
-  # 1. Rails credentials
-  # 2. Environment variables
-  # 3. Direct configuration (not recommended for production)
-  
-  # Option 1: Rails credentials (recommended for production)
-  # Run: rails credentials:edit
-  # Add:
-  #   anthropic:
-  #     api_key: your_key_here
-  
-  # Option 2: Environment variables (.env file)
-  # ANTHROPIC_API_KEY=your_key_here
+  # API key configuration
   config.anthropic_api_key = Rails.application.credentials.dig(:anthropic, :api_key) || 
                               ENV["ANTHROPIC_API_KEY"]
   
   # Model selection (defaults to claude-3-opus-20240229)
   config.anthropic_model = "claude-3-opus-20240229"
-  # Other available models:
-  # - "claude-3-sonnet-20240229" (faster, lighter)
-  # - "claude-3-haiku-20240307" (fastest, most economical)
 end
 ```
 
@@ -79,7 +62,7 @@ end
 
 ```ruby
 Sage.configure do |config|
-  config.ai_service = :openai
+  config.provider = :openai
   
   # API Key Configuration
   config.openai_api_key = Rails.application.credentials.dig(:openai, :api_key) || 
@@ -90,7 +73,7 @@ Sage.configure do |config|
 end
 ```
 
-## Blazer Integration
+## Blazer
 
 Sage is built on top of Blazer and honors all existing Blazer configurations. 
 
@@ -167,30 +150,9 @@ Sage understands:
 3. **Aggregation Patterns**: Complex scopes with GROUP BY and HAVING clauses guide report generation
 4. **Consistency**: Generated queries follow the same patterns as your application code
 
-### Writing Scope-Friendly Code
-
-To maximize Sage's effectiveness:
-
-```ruby
-# Good: Clear, semantic scopes that document business logic
-scope :premium_customers, -> { 
-  joins(:subscriptions)
-    .where(subscriptions: { tier: 'premium', status: 'active' })
-}
-
-scope :churned_recently, -> { 
-  where(churned_at: 90.days.ago..30.days.ago)
-}
-
-# These scopes become documentation for Sage to understand:
-# - What makes a customer "premium"
-# - How to identify recently churned customers
-# - The proper way to join subscriptions table
-```
-
-Your scopes now serve dual purpose:
+Scopes now serve dual purposes:
 1. Reusable query logic in your Rails application
-2. Documentation for AI-powered SQL generation
+2. Documentation for report generation
 
 ## Development
 
