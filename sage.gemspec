@@ -1,7 +1,7 @@
 require_relative "lib/sage/version"
 
 Gem::Specification.new do |spec|
-  spec.name          = "sage"
+  spec.name          = "sage-rails"
   spec.version       = Sage::VERSION
   spec.summary       = "LLM powered business intelligence. Build SQL reports using natural language."
   spec.homepage      = "https://github.com/mrjonesbot/sage"
@@ -15,13 +15,13 @@ Gem::Specification.new do |spec|
 
   spec.required_ruby_version = ">= 3.2"
 
-  spec.add_dependency "railties", ">= 7.1"
-  spec.add_dependency "activerecord", ">= 7.1"
-  spec.add_dependency "blazer", ">= 3.0"
-  spec.add_dependency "turbo-rails"
-  spec.add_dependency "importmap-rails"
-  spec.add_dependency "ransack"
-  spec.add_dependency "pagy"
-  spec.add_dependency "ruby_llm"
-  spec.add_dependency "ruby_llm-schema"
+  spec.add_dependency "railties", "~> 7.1"
+  spec.add_dependency "activerecord", "~> 7.1"
+  spec.add_dependency "blazer", "~> 3.0"
+  spec.add_dependency "turbo-rails", "~> 2.0"
+  spec.add_dependency "importmap-rails", "~> 2.0"
+  spec.add_dependency "ransack", "~> 4.0"
+  spec.add_dependency "pagy", "~> 9.0"
+  spec.add_dependency "ruby_llm", "~> 0.1"
+  spec.add_dependency "ruby_llm-schema", "~> 0.1"
 end

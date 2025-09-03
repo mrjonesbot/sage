@@ -11,7 +11,7 @@ Sage is a Rails engine built on top of the excellent [Blazer](https://github.com
 Add Sage to your application's Gemfile:
 
 ```ruby
-gem "sage"
+gem "sage-rails"
 ```
 
 Run bundle install:
