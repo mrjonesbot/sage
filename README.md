@@ -2,9 +2,22 @@
 
 ![Sage Query Interface](screenshots/sage-query-interface.png)
 
+> **Note:** This project is pre-v1 and under active development.
+
 **Natural language reporting to help your team build accurate reports, faster.**
 
 Sage is a Rails engine built on top of the excellent [Blazer](https://github.com/ankane/blazer) gem, adding an LLM interface to make data exploration accessible via natural language.
+
+## Requirements
+
+Sage relies on `turbo-rails` and `stimulus-rails` to render the dashboard. These gems should already be included in most modern Rails applications. If not, add them to your Gemfile:
+
+```ruby
+gem "turbo-rails"
+gem "stimulus-rails"
+```
+
+Refer to the [stimulus-rails installation page](https://github.com/hotwired/stimulus-rails) to get started.
 
 ## Installation
 
@@ -88,26 +101,17 @@ For detailed information on Blazer-specific features, refer to the [Blazer docum
 
 ## Database Context
 
-Sage introspects your database schema to provide context for more accurate SQL generation. This feature works out of the box with Blazer's data sources.
+Sage introspects your database schema to provide context for more accurate SQL generation. 
 
 ### Multiple Data Sources
 
-If you have multiple Blazer data sources configured, Sage will use the appropriate schema for each:
+If you have multiple databases, Sage will use the appropriate schema for each:
 
-```ruby
-# config/blazer.yml
-data_sources:
-  main:
-    url: <%= ENV["DATABASE_URL"] %>
-  analytics:
-    url: <%= ENV["ANALYTICS_DATABASE_URL"] %>
-```
-
-When querying from different data sources in Blazer, Sage automatically switches schema context.
+When querying different data sources in Blazer, Sage will switch schema context.
 
 ## Model Scope Context
 
-Sage leverages your Rails model scopes as documentation for query patterns, dramatically improving the accuracy of generated SQL queries, especially for complex multi-table reports.
+Sage introspects your Rails model scopes to understand common query patterns, dramatically improving the accuracy of generated SQL queries.
 
 ### Example
 
@@ -144,9 +148,8 @@ Sage understands:
 ### Benefits
 
 1. **Business Logic Awareness**: Scopes encode your business rules (what makes a customer "active" or "high-value")
-2. **Correct JOIN Patterns**: Scopes show the proper way to join tables in your application
-3. **Aggregation Patterns**: Complex scopes with GROUP BY and HAVING clauses guide report generation
-4. **Consistency**: Generated queries follow the same patterns as your application code
+2. **Aggregation Patterns**: Complex scopes with GROUP BY and HAVING clauses guide report generation
+3. **Consistency**: Generated queries follow the same patterns as your application code
 
 Scopes now serve dual purposes:
 1. Reusable query logic in your Rails application
@@ -185,11 +188,6 @@ $ rails test
 - Verify database schema is being loaded (check logs for schema context)
 - Ensure model files are in standard Rails locations (`app/models/`)
 - Check that Blazer is properly configured and can execute queries
-
-### Performance
-- Use lighter models (Claude Haiku, GPT-3.5) for faster response times
-- Consider caching frequently used queries
-- Scope context is cached per request to minimize processing
 
 ## Contributing
 
