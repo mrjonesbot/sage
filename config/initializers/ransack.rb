@@ -1,17 +1,17 @@
-require 'ransack'
+require "ransack"
 
 # Configure Ransack for Blazer models
 Rails.application.config.after_initialize do
   # Ensure Blazer is loaded first
-  require 'blazer' if defined?(Blazer)
-  
+  require "blazer" if defined?(Blazer)
+
   # Extend Blazer::Query with Ransack capabilities
   if defined?(Blazer::Query)
     # First, ensure Ransack is included in the model
     unless Blazer::Query.respond_to?(:ransack)
       Blazer::Query.send(:extend, Ransack::Adapters::ActiveRecord::Base)
     end
-    
+
     Blazer::Query.class_eval do
       # Define which attributes can be searched
       def self.ransackable_attributes(auth_object = nil)
@@ -21,7 +21,7 @@ Rails.application.config.after_initialize do
       # Define which associations can be searched
       def self.ransackable_associations(auth_object = nil)
         associations = %w[checks audits dashboard_queries dashboards]
-        associations << 'creator' if Blazer.user_class
+        associations << "creator" if Blazer.user_class
         associations
       end
 
@@ -37,14 +37,14 @@ Rails.application.config.after_initialize do
       end
     end
   end
-  
+
   # Extend Blazer::Dashboard with Ransack capabilities
   if defined?(Blazer::Dashboard)
     # First, ensure Ransack is included in the model
     unless Blazer::Dashboard.respond_to?(:ransack)
       Blazer::Dashboard.send(:extend, Ransack::Adapters::ActiveRecord::Base)
     end
-    
+
     Blazer::Dashboard.class_eval do
       # Define which attributes can be searched
       def self.ransackable_attributes(auth_object = nil)
@@ -54,7 +54,7 @@ Rails.application.config.after_initialize do
       # Define which associations can be searched
       def self.ransackable_associations(auth_object = nil)
         associations = %w[dashboard_queries queries]
-        associations << 'creator' if Blazer.user_class
+        associations << "creator" if Blazer.user_class
         associations
       end
     end
@@ -68,7 +68,7 @@ Rails.application.config.to_prepare do
     unless Blazer::Query.respond_to?(:ransack)
       Blazer::Query.send(:extend, Ransack::Adapters::ActiveRecord::Base)
     end
-    
+
     unless Blazer::Query.respond_to?(:ransackable_attributes)
       Blazer::Query.class_eval do
         def self.ransackable_attributes(auth_object = nil)
@@ -85,13 +85,13 @@ Rails.application.config.to_prepare do
       end
     end
   end
-  
+
   if defined?(Blazer::Dashboard)
     # Ensure Ransack is included
     unless Blazer::Dashboard.respond_to?(:ransack)
       Blazer::Dashboard.send(:extend, Ransack::Adapters::ActiveRecord::Base)
     end
-    
+
     unless Blazer::Dashboard.respond_to?(:ransackable_attributes)
       Blazer::Dashboard.class_eval do
         def self.ransackable_attributes(auth_object = nil)
@@ -100,19 +100,19 @@ Rails.application.config.to_prepare do
 
         def self.ransackable_associations(auth_object = nil)
           associations = %w[dashboard_queries queries]
-          associations << 'creator' if Blazer.user_class
+          associations << "creator" if Blazer.user_class
           associations
         end
       end
     end
   end
-  
+
   if defined?(Blazer::Check)
     # Ensure Ransack is included
     unless Blazer::Check.respond_to?(:ransack)
       Blazer::Check.send(:extend, Ransack::Adapters::ActiveRecord::Base)
     end
-    
+
     unless Blazer::Check.respond_to?(:ransackable_attributes)
       Blazer::Check.class_eval do
         def self.ransackable_attributes(auth_object = nil)
@@ -121,20 +121,20 @@ Rails.application.config.to_prepare do
 
         def self.ransackable_associations(auth_object = nil)
           associations = %w[query]
-          associations << 'creator' if Blazer.user_class
+          associations << "creator" if Blazer.user_class
           associations
         end
       end
     end
   end
-  
+
   # Extend Blazer::Check with Ransack capabilities
   if defined?(Blazer::Check)
     # First, ensure Ransack is included in the model
     unless Blazer::Check.respond_to?(:ransack)
       Blazer::Check.send(:extend, Ransack::Adapters::ActiveRecord::Base)
     end
-    
+
     Blazer::Check.class_eval do
       # Define which attributes can be searched
       def self.ransackable_attributes(auth_object = nil)
@@ -144,7 +144,7 @@ Rails.application.config.to_prepare do
       # Define which associations can be searched
       def self.ransackable_associations(auth_object = nil)
         associations = %w[query]
-        associations << 'creator' if Blazer.user_class
+        associations << "creator" if Blazer.user_class
         associations
       end
     end

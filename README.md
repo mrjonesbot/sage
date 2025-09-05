@@ -2,7 +2,7 @@
 
 ![Sage Query Interface](screenshots/sage-query-interface.png)
 
-> **Note:** This project is pre-v1 and under active development.
+> **Note:** This project is pre-v1 and is subject to frequent changes.
 
 **Natural language reporting to help your team build accurate reports, faster.**
 

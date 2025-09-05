@@ -4,7 +4,7 @@ module Sage
       messages.group_by { |message| message.created_at.to_date }
              .sort_by { |date, _| date }
     end
-    
+
     def format_message_date(date)
       case date
       when Date.current

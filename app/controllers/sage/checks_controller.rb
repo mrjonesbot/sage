@@ -5,13 +5,13 @@ module Sage
     def index
       @q = Blazer::Check.ransack(params[:q])
       @checks = @q.result.joins(:query).includes(:query)
-      
+
       # Apply basic ordering first
       @checks = @checks.order("blazer_queries.name, blazer_checks.id")
-      
+
       # Apply pagination with Pagy
       @pagy, @checks = pagy(@checks)
-      
+
       # Apply state-based sorting on the paginated results
       state_order = [ nil, "disabled", "error", "timed out", "failing", "passing" ]
       @checks = @checks.sort_by { |q| state_order.index(q.state) || 99 }

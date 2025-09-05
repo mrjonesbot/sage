@@ -39,7 +39,7 @@ Rails.application.configure do
 
   # Set localhost to be used by links generated in mailer templates.
   config.action_mailer.default_url_options = { host: "localhost", port: 3000 }
-  
+
   # Use test delivery method to avoid trying to send real emails
   config.action_mailer.delivery_method = :test
 

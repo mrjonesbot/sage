@@ -1,15 +1,18 @@
-# Configure Rails Environment
-ENV["RAILS_ENV"] = "test"
+require "bundler/setup"
+require "combustion"
+Bundler.require(:default)
+require "minitest/autorun"
+require "minitest/pride"
 
-require_relative "../test/dummy/config/environment"
-ActiveRecord::Migrator.migrations_paths = [ File.expand_path("../test/dummy/db/migrate", __dir__) ]
-ActiveRecord::Migrator.migrations_paths << File.expand_path("../db/migrate", __dir__)
-require "rails/test_help"
+logger = ActiveSupport::Logger.new(ENV["VERBOSE"] ? STDERR : nil)
 
-# Load fixtures from the engine
-if ActiveSupport::TestCase.respond_to?(:fixture_paths=)
-  ActiveSupport::TestCase.fixture_paths = [ File.expand_path("fixtures", __dir__) ]
-  ActionDispatch::IntegrationTest.fixture_paths = ActiveSupport::TestCase.fixture_paths
-  ActiveSupport::TestCase.file_fixture_path = File.expand_path("fixtures", __dir__) + "/files"
-  ActiveSupport::TestCase.fixtures :all
+Combustion.path = "test/internal"
+Combustion.initialize! :active_record, :action_controller, :action_view do
+  config.load_defaults Rails::VERSION::STRING.to_f
+  config.action_controller.logger = logger
+  config.active_record.logger = logger
+  config.cache_store = :memory_store
+
+  # fixes warning with adapter tests
+  config.action_dispatch.show_exceptions = :none
 end

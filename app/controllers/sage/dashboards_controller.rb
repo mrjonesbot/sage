@@ -1,21 +1,21 @@
 module Sage
   class DashboardsController < BaseController
-    before_action :set_dashboard, only: [:show, :edit, :update, :destroy, :refresh]
+    before_action :set_dashboard, only: [ :show, :edit, :update, :destroy, :refresh ]
 
     def index
       @q = Blazer::Dashboard.ransack(params[:q])
       @dashboards = @q.result
-      
+
       # Only include creator if Blazer.user_class is configured
       @dashboards = @dashboards.includes(:creator) if Blazer.user_class
-      
+
       @dashboards = @dashboards.order(:name)
-      
+
       # Apply additional filters if needed
       if blazer_user && params[:filter] == "mine"
         @dashboards = @dashboards.where(creator_id: blazer_user.id).reorder(updated_at: :desc)
       end
-      
+
       # Apply pagination with Pagy
       @pagy, @dashboards = pagy(@dashboards)
     end
@@ -40,7 +40,7 @@ module Sage
     def show
       @queries = @dashboard.dashboard_queries.order(:position).preload(:query).map(&:query)
       @query_errors = {}
-      
+
       @queries.each do |query|
         # Check if the query has a valid data source
         if query.data_source.blank? || !Blazer.data_sources.key?(query.data_source)
@@ -53,12 +53,12 @@ module Sage
 
       @smart_vars = {}
       @sql_errors = []
-      @data_sources = @queries.map { |q| 
+      @data_sources = @queries.map { |q|
         # Use the query's data source if specified, otherwise use the default
         source = q.data_source.presence || Blazer.data_sources.keys.first
         Blazer.data_sources[source]
       }.compact.uniq
-      
+
       @bind_vars.each do |var|
         @data_sources.each do |data_source|
           smart_var, error = parse_smart_variables(var, data_source)
@@ -127,4 +127,3 @@ module Sage
     end
   end
 end
-

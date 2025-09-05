@@ -5,7 +5,7 @@ Sage::Engine.routes.draw do
     post :refresh, on: :member
     get :run, on: :member
 
-    resources :messages, only: [:index, :create], controller: 'queries/messages'
+    resources :messages, only: [ :index, :create ], controller: "queries/messages"
 
     collection do
       post :run
