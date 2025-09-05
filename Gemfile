@@ -8,9 +8,9 @@ gem "sqlite3"
 gem "propshaft"
 gem "importmap-rails"
 gem "stimulus-rails"
-gem "actionmailer"
-gem "actioncable"
-gem "actionview"
+
+# Test dependencies
+gem "combustion", "~> 1.3"
 
 # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
 gem "rubocop-rails-omakase", require: false
