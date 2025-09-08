@@ -141,8 +141,8 @@ module Sage
     end
 
     initializer "sage.assets" do |app|
-      # Add JavaScript path for Propshaft
-      if defined?(Propshaft::Railtie)
+      # Add JavaScript paths based on asset pipeline
+      if app.config.respond_to?(:assets)
         app.config.assets.paths << Engine.root.join("app/javascript")
         app.config.assets.paths << Engine.root.join("app/javascript/sage")
       end

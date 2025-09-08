@@ -10,6 +10,8 @@ Sage is a Rails engine built on top of the excellent [Blazer](https://github.com
 
 ## Requirements
 
+Rails 7.1+ is recommended, compatability with older versions not guaranteed.
+
 Sage relies on `turbo-rails` and `stimulus-rails` to render the dashboard. These gems should already be included in most modern Rails applications. If not, add them to your Gemfile:
 
 ```ruby
@@ -45,7 +47,6 @@ This generator will:
 - Mount Sage at `/sage` in your routes
 - Create an initializer at `config/initializers/sage.rb`
 - Set up database migrations for message storage
-- Configure JavaScript and CSS dependencies
 
 After installation, run the migrations:
 ```bash

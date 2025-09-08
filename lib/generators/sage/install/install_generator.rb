@@ -20,7 +20,6 @@ module Sage
       end
 
       def add_routes
-        # Remove existing Blazer route if present
         routes_file = "config/routes.rb"
         if File.exist?(routes_file)
           routes_content = File.read(routes_file)
@@ -29,15 +28,19 @@ module Sage
           blazer_route_pattern = /^\s*mount\s+Blazer::Engine\s*,\s*at:\s*['"]blazer['"]\s*$/
 
           if routes_content.match?(blazer_route_pattern)
-            # Remove the Blazer route
-            gsub_file routes_file, blazer_route_pattern, ""
-            say "Removed existing Blazer route", :yellow
+            # Replace the Blazer route with Sage route
+            gsub_file routes_file, blazer_route_pattern, '  mount Sage::Engine => "/sage"'
+            say "Replaced Blazer route with Sage route at /sage", :green
+          else
+            # No existing Blazer route, add Sage route
+            route 'mount Sage::Engine => "/sage"'
+            say "Mounted Sage at /sage", :green
           end
+        else
+          # No routes file, add Sage route
+          route 'mount Sage::Engine => "/sage"'
+          say "Mounted Sage at /sage", :green
         end
-
-        # Mount Sage (which includes Blazer functionality)
-        route 'mount Sage::Engine => "/sage"'
-        say "Mounted Sage at /sage", :green
       end
 
       def create_initializer
@@ -70,31 +73,6 @@ module Sage
         end
 
         say "Created migration for sage_messages table", :green
-      end
-
-      def add_javascript_integration
-        say "Configuring JavaScript integration...", :green
-
-        # Update controllers/index.js to register Sage controllers
-        controllers_index_path = "app/javascript/controllers/index.js"
-        if File.exist?(controllers_index_path)
-          controllers_content = File.read(controllers_index_path)
-          unless controllers_content.include?("sage")
-            append_to_file controllers_index_path do
-              <<~JS
-
-                // Import and register Sage controllers
-                import { registerControllers } from "sage"
-                registerControllers(application)
-              JS
-            end
-            say "Updated controllers/index.js to register Sage controllers", :green
-          else
-            say "Sage controllers already registered in controllers/index.js", :yellow
-          end
-        else
-          say "Could not find app/javascript/controllers/index.js - you'll need to manually import Sage controllers", :yellow
-        end
       end
 
       def add_stylesheets
