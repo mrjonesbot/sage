@@ -28,12 +28,12 @@
   <p style="white-space: pre-line;"><%= @query.description %></p>
 <% end %>
 
-<%= render partial: "blazer/variables", locals: { action: query_path(@query) } %>
+<%= render partial: "sage/variables", locals: { action: query_path(@query) } %>
 
 <pre id="code"><code><%= @statement.display_statement %></code></pre>
 
 <% if @success %>
-  <%= turbo_frame_tag dom_id(@query, 'results'), src: run_query_path(@query.id, from_show: true) do  %>
+  <%= turbo_frame_tag dom_id(@query, 'results'), src: run_query_path(@query.id, from_show: true, variables: variable_params(@query)) do  %>
     loading...
   <% end %>
 <% end %>

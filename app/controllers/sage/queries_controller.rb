@@ -150,7 +150,7 @@ module Sage
 
       # fallback for now for users with open tabs
       # TODO remove fallback in future version
-      @var_params = request.request_parameters["variables"] || request.request_parameters
+      @var_params = params[:variables] || request.request_parameters["variables"] || request.request_parameters
       @success = process_vars(@statement, @var_params)
       @only_chart = params[:only_chart]
       @run_id = blazer_params[:run_id]
