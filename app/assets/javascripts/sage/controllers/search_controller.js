@@ -9,7 +9,6 @@ export default class extends Controller {
   }
 
   connect() {
-    console.log("Search controller initialized");
     // Find the search input
     this.searchInput = this.element.querySelector('input[type="search"]');
 

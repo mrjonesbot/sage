@@ -27,7 +27,6 @@
       setTimeout(() => {
         const messagesDiv = document.getElementById('<%= dom_id(@query, 'messages') %>');
         if (messagesDiv) {
-          console.log("Scrolling to bottom, scrollHeight:", messagesDiv.scrollHeight);
           messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
       }, 100);
@@ -35,7 +34,6 @@
       setTimeout(() => {
         const messagesDiv = document.getElementById('<%= dom_id(@query, 'messages') %>');
         if (messagesDiv) {
-          console.log("Final scroll to bottom, scrollHeight:", messagesDiv.scrollHeight);
           messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
       }, 500);

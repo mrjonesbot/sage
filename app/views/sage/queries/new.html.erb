@@ -1,36 +1,67 @@
 <%= blazer_title "New Query" %>
-<%# <%= render partial: "form" %>
 
 <div class="padding left-align">
-  <h5 class="">New Query</h5>
+  <h5>New Query</h5>
 </div>
 
 <div class="sage-container">
-  <div class="sage-header">
-    <h5>What are you curious about?</h5>
+  <!-- BeerCSS Tabs -->
+  <div>
+    <div class="tabs">
+      <a id="prompt-tab" class="active">Ask AI</a>
+      <a id="sql-tab">Write SQL</a>
+    </div>
+    
+    <!-- Prompt Mode Page -->
+    <div id="prompt-page" class="page padding active">
+      <%= form_with url: queries_path, method: :post, local: true, scope: :query do |f| %>
+        <div class="form-group">
+          <%= f.label :question, "Your Question", class: "form-label left-align" %>
+          <%= f.text_area :question, 
+              class: "form-control", 
+              rows: 8,
+              placeholder: "e.g., Show me the top 10 customers by revenue in the last 30 days" %>
+          <small class="form-text text-muted">
+            Be specific about tables, columns, and conditions when possible
+          </small>
+        </div>
+
+        <div class="form-actions">
+          <button type='submit' data-disable-with='Generating...'>Generate Report</button>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- SQL Mode Page -->
+    <div id="sql-page" class="page padding">
+      <%= form_with url: queries_path, method: :post, local: true, scope: :query do |f| %>
+        <div class="form-group">
+          <%= f.label :name, "Query Name", class: "form-label left-align" %>
+          <%= f.text_field :name, 
+              class: "form-control", 
+              placeholder: "Enter a name for your query",
+              value: params[:name] %>
+        </div>
+        
+        <div class="form-group">
+          <%= f.label :statement, "SQL Statement", class: "form-label left-align" %>
+          <% 
+            forked_statement = ""
+            if params[:fork_query_id].present?
+              forked_query = Blazer::Query.find_by(id: params[:fork_query_id])
+              forked_statement = forked_query&.statement || ""
+            end
+          %>
+          <%= f.hidden_field :statement, id: 'sql_statement_field' %>
+          <div id="sql-editor" style="height: 300px; border: 1px solid #ddd; border-radius: 4px;" data-initial-content="<%= html_escape(forked_statement) %>"><%= forked_statement %></div>
+        </div>
+
+        <div class="form-actions">
+          <button type='submit' data-disable-with='Creating...'>Create Query</button>
+        </div>
+      <% end %>
+    </div>
   </div>
-
-  <%= form_with url: queries_path, method: :post, local: true, scope: :query do |f| %>
-    <div class="form-group">
-      <%= label_tag "query[question]", "Your Question", class: "form-label" %>
-      <%= text_area_tag "query[question]", nil, 
-          class: "form-control", 
-          rows: 8,
-          placeholder: "e.g., Show me the top 10 customers by revenue in the last 30 days",
-          required: true,
-          data: { sage_target: "question" } %>
-      <small class="form-text text-muted">
-        Be specific about tables, columns, and conditions when possible
-      </small>
-    </div>
-
-    <div class="form-actions">
-      <button type='submit' data-disable-with='Generating...'>Generate Report</button>
-    </div>
-  <% end %>
-
-  <turbo-frame id="query_result">
-  </turbo-frame>
 
   <% if @schema.present? %>
     <div class="padding">
@@ -75,15 +106,6 @@
     padding: 20px;
   }
 
-  .sage-header {
-    margin-bottom: 30px;
-    text-align: center;
-  }
-
-  .sage-header h1 {
-    margin-bottom: 10px;
-  }
-
   .form-group {
     margin-bottom: 20px;
   }
@@ -92,6 +114,10 @@
     font-weight: bold;
     margin-bottom: 5px;
     display: block;
+  }
+
+  .form-label.left-align {
+    text-align: left;
   }
 
   .form-control {
@@ -130,33 +156,6 @@
     text-align: center;
   }
 
-  .btn {
-    display: inline-block;
-    padding: 10px 20px;
-    font-size: 16px;
-    font-weight: 500;
-    text-align: center;
-    text-decoration: none;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .btn-primary {
-    background-color: #4CAF50;
-    color: white;
-  }
-
-  .btn-primary:hover {
-    background-color: #45a049;
-  }
-
-  .btn-primary:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
   .text-muted {
     color: #666;
     font-size: 14px;
@@ -190,6 +189,135 @@
     text-overflow: ellipsis;
     margin-bottom: 10px;
   }
-
 </style>
 
+<script>
+  // ACE Editor initialization
+  let sqlEditor = null;
+
+  function initializeAceEditor() {
+    if (sqlEditor) {
+      sqlEditor.destroy();
+    }
+    
+    const editorDiv = document.getElementById('sql-editor');
+    if (!editorDiv) return;
+    
+    sqlEditor = ace.edit("sql-editor");
+    sqlEditor.setTheme("ace/theme/twilight");
+    sqlEditor.getSession().setMode("ace/mode/sql");
+    sqlEditor.setOptions({
+      enableBasicAutocompletion: false,
+      enableSnippets: false,
+      enableLiveAutocompletion: false,
+      highlightActiveLine: false,
+      fontSize: 12,
+      minLines: 10,
+      scrollPastEnd: 0.25
+    });
+    sqlEditor.renderer.setShowGutter(true);
+    sqlEditor.renderer.setPrintMarginColumn(false);
+    sqlEditor.setShowPrintMargin(false);
+    sqlEditor.renderer.setPadding(10);
+    sqlEditor.getSession().setUseWrapMode(true);
+
+    // Set initial content
+    const initialContent = editorDiv.getAttribute("data-initial-content") || "";
+    if (initialContent) {
+      sqlEditor.setValue(initialContent, -1);
+    }
+
+    // Update hidden field when content changes
+    sqlEditor.getSession().on("change", function() {
+      const statementField = document.getElementById('sql_statement_field');
+      if (statementField) {
+        statementField.value = sqlEditor.getValue();
+      }
+    });
+
+    // Set initial value in hidden field
+    const statementField = document.getElementById('sql_statement_field');
+    if (statementField) {
+      statementField.value = sqlEditor.getValue();
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const promptTab = document.getElementById('prompt-tab');
+    const sqlTab = document.getElementById('sql-tab');
+    const promptPage = document.getElementById('prompt-page');
+    const sqlPage = document.getElementById('sql-page');
+
+    function switchToPromptMode() {
+      promptTab.classList.add('active');
+      sqlTab.classList.remove('active');
+      promptPage.classList.add('active');
+      sqlPage.classList.remove('active');
+    }
+
+    function switchToSqlMode() {
+      sqlTab.classList.add('active');
+      promptTab.classList.remove('active');
+      sqlPage.classList.add('active');
+      promptPage.classList.remove('active');
+    }
+
+    promptTab.addEventListener('click', switchToPromptMode);
+    sqlTab.addEventListener('click', switchToSqlMode);
+
+    // If we have fork parameters, automatically switch to SQL mode
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('fork_query_id') || urlParams.get('name')) {
+      console.log('Fork detected, switching to SQL mode');
+      switchToSqlMode();
+      // Initialize ACE editor immediately for forks
+      setTimeout(() => {
+        console.log('Initializing ACE editor for fork');
+        initializeAceEditor();
+      }, 200);
+    }
+  });
+
+  // Initialize ACE editor when SQL tab is clicked
+  document.addEventListener('click', function(e) {
+    if (e.target.id === 'sql-tab') {
+      setTimeout(() => {
+        initializeAceEditor();
+      }, 100);
+    }
+  });
+
+  // Ensure form submission captures the editor value
+  document.addEventListener('submit', function(e) {
+    if (e.target.closest('#sql-page') && sqlEditor) {
+      const statementField = document.getElementById('sql_statement_field');
+      if (statementField) {
+        statementField.value = sqlEditor.getValue();
+      }
+    }
+  });
+
+  // Handle Turbo navigation for fork detection
+  document.addEventListener('turbo:load', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('fork_query_id') || urlParams.get('name')) {
+      console.log('Fork detected via turbo:load, switching to SQL mode');
+      const promptTab = document.getElementById('prompt-tab');
+      const sqlTab = document.getElementById('sql-tab');
+      const promptPage = document.getElementById('prompt-page');
+      const sqlPage = document.getElementById('sql-page');
+      
+      if (sqlTab && promptTab && sqlPage && promptPage) {
+        sqlTab.classList.add('active');
+        promptTab.classList.remove('active');
+        sqlPage.classList.add('active');
+        promptPage.classList.remove('active');
+        
+        setTimeout(() => {
+          console.log('Initializing ACE editor for fork via turbo:load');
+          initializeAceEditor();
+        }, 200);
+      }
+    }
+  });
+</script>

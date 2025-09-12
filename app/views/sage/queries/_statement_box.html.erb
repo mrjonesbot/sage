@@ -28,7 +28,7 @@
   }
 </style>
 
-<div id=<%= dom_id(query, 'statement-box') %> class='' style="position: relative;">
+<div id=<%= dom_id(query, 'statement-box') %> class='' style="position: relative; border-radius: 10px;">
   <% 
     # Handle different contexts - job vs regular view rendering
     form_url = if local_assigns[:form_url]
@@ -46,12 +46,8 @@
     <%= f.hidden_field :statement, id: 'query_statement' %>
     <%= f.hidden_field :query_id, value: query.id %>
     <%= f.hidden_field :data_source, value: query.data_source || Blazer.data_sources.keys.first %>
-    <div id="editor-container" style="position: relative; overflow: hidden;">
-      <div id="editor" style="height: 200px;" data-initial-content="<%= html_escape(local_assigns[:statement] || query.statement) %>"><%= local_assigns[:statement] || query.statement %></div>
-      <div style="position: absolute; bottom: 10px; right: 15px; z-index: 1000; border-radius: 4px; padding: 5px; display: flex; gap: 8px;">
-        <button type='button' onclick="formatSQL()" class="secondary">Format</button>
-        <button type='submit' class="<%= 'glow-button' if local_assigns[:statement].present? %>">Run</button>
-      </div>
+    <div id="editor-container" style="position: relative;">
+      <div id="editor" style="height: 225px;" data-initial-content="<%= html_escape(local_assigns[:statement] || query.statement) %>"><%= local_assigns[:statement] || query.statement %></div>
     </div>
   <% end %>
 </div>
@@ -79,7 +75,7 @@
                           'COALESCE', 'NULLIF', 'DATE_TRUNC', 'EXTRACT', 'SUBSTRING',
                           'CONCAT', 'LENGTH', 'LOWER', 'UPPER', 'TRIM', 'REPLACE'];
     
-    // Preserve string literals and comments
+    // Preserve string literals, comments, and JSON operators
     const preservedStrings = [];
     let preservedIndex = 0;
     
@@ -96,6 +92,12 @@
     });
     
     sql = sql.replace(/\/\*[\s\S]*?\*\//g, (match) => {
+      preservedStrings.push(match);
+      return `__PRESERVED_STRING_${preservedIndex++}__`;
+    });
+    
+    // Preserve JSON operators and comparison operators EARLY before any other processing
+    sql = sql.replace(/->>|->|#>>|#>|@>|<@|>=|<=|<>|!=|\?\?|\?&|\?/g, (match) => {
       preservedStrings.push(match);
       return `__PRESERVED_STRING_${preservedIndex++}__`;
     });
@@ -154,14 +156,24 @@
     // Remove leading newline if present
     sql = sql.replace(/^\n+/, '');
     
-    // Ensure consistent spacing around operators
+    // Ensure consistent spacing around basic operators (complex operators already preserved)
     sql = sql.replace(/\s*=\s*/g, ' = ');
-    sql = sql.replace(/\s*<>\s*/g, ' <> ');
-    sql = sql.replace(/\s*!=\s*/g, ' != ');
-    sql = sql.replace(/\s*<=\s*/g, ' <= ');
-    sql = sql.replace(/\s*>=\s*/g, ' >= ');
     sql = sql.replace(/\s*<\s*/g, ' < ');
     sql = sql.replace(/\s*>\s*/g, ' > ');
+    
+    // Final fix: repair any broken operators that slipped through
+    sql = sql.replace(/>\s*=/g, '>=');
+    sql = sql.replace(/<\s*=/g, '<='); 
+    sql = sql.replace(/@\s*>/g, '@>');
+    sql = sql.replace(/<\s*>/g, '<>');
+    sql = sql.replace(/!\s*=/g, '!=');
+    sql = sql.replace(/-\s*>/g, '->');
+    sql = sql.replace(/-\s*>>/g, '->>');
+    sql = sql.replace(/#\s*>/g, '#>');
+    sql = sql.replace(/#\s*>>/g, '#>>');
+    sql = sql.replace(/<\s*@/g, '<@');
+    sql = sql.replace(/\?\s*\?/g, '??');
+    sql = sql.replace(/\?\s*&/g, '?&');
     
     return sql;
   }
@@ -182,7 +194,8 @@
   enableLiveAutocompletion: false,
   highlightActiveLine: false,
   fontSize: 12,
-  minLines: 10
+  minLines: 10,
+  scrollPastEnd: 0.25
   })
   editor.renderer.setShowGutter(true)
   editor.renderer.setPrintMarginColumn(false)
@@ -190,15 +203,22 @@
   editor.renderer.setPadding(10)
   editor.getSession().setUseWrapMode(true)
   
-  // Ensure scrolling works properly with bottom margin
-  editor.renderer.setScrollMargin(0, 0, 50, 0)  // top, right, bottom, left margins
+  // Ensure proper scrolling with bottom margin for buttons
+  editor.renderer.setScrollMargin(0, 0, 60, 0)  // top, right, bottom, left margins
   editor.setAutoScrollEditorIntoView(true)
+  
+  // Force scrollbar to always be visible for consistent layout
+  editor.setOption("vScrollBarAlwaysVisible", true)
+  
+  // Add bottom padding to content area to ensure last line is fully visible
+  editor.renderer.setPadding(10, 10, 60, 10)  // top, right, bottom, left padding
 
-  // Update both hidden fields when editor content changes
+  // Update all hidden fields when editor content changes
   editor.getSession().on("change", function () {
   const value = editor.getValue()
-  $("#query_statement").val(value)  // For run form
+  $("#query_statement").val(value)  // For statement_box run form
   $("#query_statement_form").val(value)  // For main form
+  $("#run_query_statement").val(value)  // For new_form run button
   })
 
   // Set initial value from data attribute or current content
@@ -212,6 +232,7 @@
   const initialValue = editor.getValue()
   $("#query_statement").val(initialValue)
   $("#query_statement_form").val(initialValue)
+  $("#run_query_statement").val(initialValue)
   editor.focus()
 
   // Add top padding to ace_scroller and gutter to keep them aligned

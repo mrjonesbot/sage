@@ -6,7 +6,7 @@
   </h5>
 </div>
 
-<div class="row right-align">
+<div class="row right-align" style="margin-bottom: 24px;">
   <%= link_to "Edit", edit_query_path(@query, params: variable_params(@query)), class: "btn btn-default", data: { turbo: false }, disabled: !@query.editable?(blazer_user) %>
   <%= link_to "Fork", new_query_path(params: {variables: variable_params(@query), fork_query_id: @query.id, data_source: @query.data_source, name: @query.name}), class: "btn btn-info" %>
   <% if !@error && @success %>
@@ -30,7 +30,14 @@
 
 <%= render partial: "sage/variables", locals: { action: query_path(@query) } %>
 
-<pre id="code"><code><%= @statement.display_statement %></code></pre>
+<div data-controller="sage--query-toggle">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+    <span>Statement</span>
+    <i class="material-icons" data-sage--query-toggle-target="icon" data-action="click->sage--query-toggle#toggle" style="cursor: pointer; font-size: 18px; opacity: 0.6;">visibility_off</i>
+  </div>
+  
+  <pre id="code" data-sage--query-toggle-target="content"><code><%= @statement.try(:display_statement) || @query.statement %></code></pre>
+</div>
 
 <% if @success %>
   <%= turbo_frame_tag dom_id(@query, 'results'), src: run_query_path(@query.id, from_show: true, variables: variable_params(@query)) do  %>

@@ -7,7 +7,9 @@ gem "puma"
 gem "sqlite3"
 gem "propshaft"
 gem "importmap-rails"
+gem "turbo-rails"
 gem "stimulus-rails"
+gem "actioncable"
 
 # Test dependencies
 gem "combustion", "~> 1.3"

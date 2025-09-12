@@ -96,6 +96,8 @@ module Sage
         @query = Blazer::Query.new(query_params)
         @query.creator = blazer_user if @query.respond_to?(:creator)
         @query.status = "active" if @query.respond_to?(:status)
+        # Ensure data_source is set for SQL queries
+        @query.data_source ||= Blazer.data_sources.keys.first
 
         if @query.save
           redirect_to query_path(@query, params: variable_params(@query))
@@ -524,73 +526,3 @@ module Sage
     end
   end
 end
-#
-# module Sage
-#   class QueriesController < ApplicationController
-#     before_action :set_data_source
-#
-#     def new
-#       @query = Blazer::Query.new
-#     end
-#
-#     def create
-#       @query = Blazer::Query.new(name: "Sage Query: #{Time.current}")
-#       @query.statement = generate_sql_from_question(query_params[:question])
-#       @query.creator = blazer_user if defined?(blazer_user)
-#
-#       # Optionally save the query if configured
-#       if Sage.configuration.auto_save_queries && @query.statement.present?
-#         @query.save
-#       end
-#
-#       # Store the question for display
-#       @question = query_params[:question]
-#
-#       respond_to do |format|
-#         format.turbo_stream
-#         format.html { render :new }
-#       end
-#     end
-#
-#     def run
-#       @query = Blazer::Query.new(statement: query_params[:sql])
-#
-#       # Use Blazer's run method to execute the query
-#       @result = Blazer.data_sources[@data_source].run_statement(@query.statement)
-#
-#       # Check for errors
-#       if @result.error.present?
-#         @error = @result.error
-#       end
-#
-#       respond_to do |format|
-#         format.turbo_stream
-#         format.html
-#       end
-#     end
-#
-#     private
-#
-#     def set_data_source
-#       @data_source = params[:data_source] || Blazer.data_sources.keys.first
-#     end
-#
-#     def query_params
-#       params.require(:query).permit(:question, :sql, :data_source)
-#     end
-#
-#     def generate_sql_from_question(question)
-#       # Placeholder for AI integration
-#       # In production, this would call your AI service (OpenAI, Anthropic, etc.)
-#       "-- AI generated SQL for: #{question}\n" +
-#       "-- TODO: Integrate with AI service\n" +
-#       "SELECT 'Please configure AI service' as message;"
-#     end
-#
-#     def blazer_user
-#       # Override this method to provide the current user
-#       # For example: current_user.email if using Devise
-#       "sage-user"
-#     end
-#   end
-# end

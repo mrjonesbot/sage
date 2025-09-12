@@ -5,6 +5,8 @@ pin "sage/controllers/clipboard_controller", to: "sage/controllers/clipboard_con
 pin "sage/controllers/select_controller", to: "sage/controllers/select_controller.js"
 pin "sage/controllers/dashboard_controller", to: "sage/controllers/dashboard_controller.js"
 pin "sage/controllers/reverse_infinite_scroll_controller", to: "sage/controllers/reverse_infinite_scroll_controller.js"
+pin "sage/controllers/variables_controller", to: "sage/controllers/variables_controller.js"
+pin "sage/controllers/query_toggle_controller", to: "sage/controllers/query_toggle_controller.js"
 
 # Don't pin common libraries - let the host app handle them
 # pin "@hotwired/stimulus", to: "stimulus.min.js"

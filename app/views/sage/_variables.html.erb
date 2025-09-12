@@ -9,36 +9,40 @@
       return moment.tz(time.format(format), timeZone)
     }
   <% end %>
-  <div data-controller="sage--variables" data-sage--variables-form-target="form">
-    <form id="bind" method="get" action="<%= action %>" class="form-inline" style="margin-bottom: 15px;">
-      <% date_vars = ["start_time", "end_time"] %>
-      <% if (date_vars - @bind_vars).empty? %>
-        <% @bind_vars = @bind_vars - date_vars %>
-      <% else %>
-        <% date_vars = nil %>
-      <% end %>
-
-      <% @bind_vars.each_with_index do |var, i| %>
-        <div style="margin-bottom: 10px;">
-          <div style="margin-bottom: 3px;">
-            <small class="text-muted"><code>{{<%= var %>}}</code></small>
-          </div>
-        </div>
-        <% if (data = @smart_vars[var]) %>
-          <%= select_tag var, options_for_select([[nil, nil]] + data, selected: var_params[var]), style: "margin-right: 20px; width: 200px; display: none;", data: { "sage--variables-target": "variable" } %>
-          <%= javascript_tag nonce: true do %>
-            $("#<%= var %>").selectize({
-              create: true
-            });
+  
+  <!-- Filter Navigation Area -->
+  <div class="surface border left-round" style="padding: 16px; margin-bottom: 20px; background-color: #f8f9fa;">
+    <h6 style="margin: 0 0 16px 0; color: #6b7280; font-weight: 500;">Query Filters</h6>
+    
+    <div data-controller="sage--variables" data-sage--variables-form-target="form">
+      <form id="bind" method="get" action="<%= action %>">
+        <div class="grid">
+          <% date_vars = ["start_time", "end_time"] %>
+          <% if (date_vars - @bind_vars).empty? %>
+            <% @bind_vars = @bind_vars - date_vars %>
+          <% else %>
+            <% date_vars = nil %>
           <% end %>
-        <% elsif var.end_with?("_at") || var == "start_time" || var == "end_time" %>
-          <%= hidden_field_tag var, var_params[var], data: { "sage--variables-target": "variable" } %>
 
-          <div class="selectize-control single" style="width: 200px;">
-            <div id="<%= var %>-select" class="selectize-input" style="display: inline-block;">
-              <span>Select a date</span>
-            </div>
-          </div>
+          <% @bind_vars.each_with_index do |var, i| %>
+            <div class="s12 m6 l4" style="margin-bottom: 20px;">
+              <label style="display: block; margin-bottom: 6px; color: #6b7280; font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">
+                {<%= var %>}
+              </label>
+              <% if (data = @smart_vars[var]) %>
+                <%= select_tag var, options_for_select([[nil, nil]] + data, selected: var_params[var]), 
+                    style: "width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; height: 42px; box-sizing: border-box;", 
+                    data: { "sage--variables-target": "variable" } %>
+                <%= javascript_tag nonce: true do %>
+                  $("#<%= var %>").selectize({
+                    create: true
+                  });
+                <% end %>
+              <% elsif var.end_with?("_at") || var == "start_time" || var == "end_time" %>
+                <%= hidden_field_tag var, var_params[var], data: { "sage--variables-target": "variable" } %>
+                <div id="<%= var %>-select" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; background: white; cursor: pointer; font-size: 14px; color: #6b7280; height: 42px; box-sizing: border-box; display: flex; align-items: center;">
+                  <span>Select a date</span>
+                </div>
 
           <%= javascript_tag nonce: true do %>
             (function() {
@@ -71,24 +75,41 @@
               }
             })()
           <% end %>
-        <% else %>
-          <%= text_field_tag var, var_params[var], style: "width: 120px; margin-right: 20px;", autofocus: i == 0 && !var.end_with?("_at") && !var_params[var], class: "form-control", data: { "sage--variables-target": "variable" } %>
-        <% end %>
-      <% end %>
+              <% else %>
+                <%= text_field_tag var, var_params[var], 
+                    style: "width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; height: 42px; box-sizing: border-box;", 
+                    autofocus: i == 0 && !var.end_with?("_at") && !var_params[var], 
+                    data: { "sage--variables-target": "variable" }, 
+                    placeholder: "Enter #{var.humanize.downcase}" %>
+              <% end %>
+            </div>
+          <% end %>
 
-      <% if date_vars %>
-        <% date_vars.each do |var| %>
-          <%= hidden_field_tag var, var_params[var], data: { "sage--variables-target": "variable" } %>
-        <% end %>
-
-        <div style="margin-bottom: 5px; text-align: left;">
-          <small class="text-muted"><code>{{<%= date_vars.join('}}, {{') %>}}</code></small>
+          <% if date_vars %>
+            <% date_vars.each do |var| %>
+              <%= hidden_field_tag var, var_params[var], data: { "sage--variables-target": "variable" } %>
+            <% end %>
+            
+            <div class="s12 m6 l4" style="margin-bottom: 20px;">
+              <label style="display: block; margin-bottom: 6px; color: #6b7280; font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">
+                {<%= date_vars.join('}, {') %>}
+              </label>
+              <div id="reportrange" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; background: white; cursor: pointer; font-size: 14px; color: #6b7280; height: 42px; box-sizing: border-box; display: flex; align-items: center;">
+                <span>Select a time range</span>
+              </div>
+            </div>
+          <% end %>
         </div>
-        <div class="selectize-control single" style="width: 300px;">
-          <div id="reportrange" class="selectize-input" style="display: inline-block;">
-            <span>Select a time range</span>
-          </div>
+        
+        <div class="right-align" style="margin-top: 16px;">
+          <button type='submit' class='button primary'>
+            <i>play_arrow</i>
+            Run Query
+          </button>
         </div>
+      </form>
+    </div>
+  </div>
 
         <%= javascript_tag nonce: true do %>
           function dateStr(daysAgo) {
@@ -160,9 +181,4 @@
             }
           }
         <% end %>
-      <% end %>
-
-      <button type='submit' class='btn btn-primary'>Run</button>
-    </form>
-  </div>
 <% end %>

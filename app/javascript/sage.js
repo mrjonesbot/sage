@@ -5,9 +5,10 @@ import SelectController from "sage/controllers/select_controller"
 import DashboardController from "sage/controllers/dashboard_controller"
 import ReverseInfiniteScrollController from "sage/controllers/reverse_infinite_scroll_controller"
 import VariablesController from "sage/controllers/variables_controller"
+import QueryToggleController from "sage/controllers/query_toggle_controller.js"
 
 // Export all Sage controllers for manual registration
-export { SearchController, ClipboardController, SelectController, DashboardController, ReverseInfiniteScrollController, VariablesController }
+export { SearchController, ClipboardController, SelectController, DashboardController, ReverseInfiniteScrollController, VariablesController, QueryToggleController }
 
 // Register all Sage controllers with the provided Stimulus application
 export function registerControllers(application) {
@@ -17,5 +18,6 @@ export function registerControllers(application) {
   application.register("sage--dashboard", DashboardController)
   application.register("sage--reverse-infinite-scroll", ReverseInfiniteScrollController)
   application.register("sage--variables", VariablesController)
+  application.register("sage--query-toggle", QueryToggleController)
 }
 

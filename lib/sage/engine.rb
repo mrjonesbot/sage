@@ -192,7 +192,8 @@ module Sage
           "sage/controllers/clipboard_controller.js",
           "sage/controllers/select_controller.js",
           "sage/controllers/dashboard_controller.js",
-          "sage/controllers/reverse_infinite_scroll_controller.js"
+          "sage/controllers/reverse_infinite_scroll_controller.js",
+          "sage/controllers/query_toggle_controller.js"
         ]
 
         if defined?(Sprockets)

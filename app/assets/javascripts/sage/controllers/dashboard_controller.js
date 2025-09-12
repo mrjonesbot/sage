@@ -6,16 +6,10 @@ export default class extends Controller {
   static values = { queries: Array };
 
   connect() {
-    console.log("Dashboard controller connected");
-    console.log("Queries value:", this.queriesValue);
-    
     // Parse the queries value if it's a string
     const queriesData = typeof this.queriesValue === 'string' ? 
       JSON.parse(this.queriesValue) : this.queriesValue;
     this.selectedQueries = Array.isArray(queriesData) ? [...queriesData] : [];
-    
-    console.log("Selected queries:", this.selectedQueries);
-    
     this.render();
     this.setupSortable();
   }

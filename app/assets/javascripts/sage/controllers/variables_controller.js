@@ -32,7 +32,6 @@ export default class extends Controller {
   
   handleVariableChange(event) {
     const input = event.target
-    console.log(`Variable ${input.name} changed to:`, input.value)
     
     // Check if all required variables are filled and submit if so
     setTimeout(() => {
@@ -41,8 +40,6 @@ export default class extends Controller {
   }
   
   handleDateRangeChange(input, picker) {
-    console.log(`Date range updated for ${input.name}:`, input.value)
-    
     // Force update any related hidden fields
     this.updateRelatedDateFields(input, picker)
     
@@ -83,16 +80,10 @@ export default class extends Controller {
       // More robust empty check
       if (this.isEmpty(value)) {
         completed = false
-        console.log(`Variable ${input.name} is empty:`, value)
-      } else {
-        console.log(`Variable ${input.name} has value:`, value)
       }
     })
     
-    console.log(`Form completion check: ${completed ? 'Complete' : 'Incomplete'}`)
-    
     if (completed) {
-      console.log('Submitting form with all variables filled')
       form.submit()
     }
   }
@@ -112,11 +103,8 @@ export default class extends Controller {
   
   // Debug method to check current variable states
   debugVariables() {
-    console.log("=== Current Variable States ===")
     const inputs = this.formTarget.querySelectorAll('input[name], select[name]')
     inputs.forEach(input => {
-      console.log(`${input.name}: "${input.value}" (${typeof input.value})`)
     })
-    console.log("===============================")
   }
 }
