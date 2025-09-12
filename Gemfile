@@ -10,6 +10,8 @@ gem "importmap-rails"
 gem "turbo-rails"
 gem "stimulus-rails"
 gem "actioncable"
+gem "activejob"
+gem "actionmailer"
 
 # Test dependencies
 gem "combustion", "~> 1.3"
