@@ -4,7 +4,7 @@ import "@hotwired/turbo-rails"
 import { Application } from "@hotwired/stimulus"
 
 // Import and register Sage controllers
-import { SearchController, ClipboardController, SelectController, DashboardController, ReverseInfiniteScrollController, VariablesController } from "sage"
+import { SearchController, ClipboardController, SelectController, DashboardController, ReverseInfiniteScrollController, VariablesController, QueryToggleController } from "sage"
 
 const application = Application.start()
 application.debug = true
@@ -17,6 +17,7 @@ application.register("sage--select", SelectController)
 application.register("sage--dashboard", DashboardController)
 application.register("sage--reverse-infinite-scroll", ReverseInfiniteScrollController)
 application.register("sage--variables", VariablesController)
+application.register("sage--query-toggle", QueryToggleController)
 
 // Override Blazer's submitIfCompleted function globally
 window.submitIfCompleted = function($form) {
