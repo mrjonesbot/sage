@@ -5,7 +5,7 @@ import SelectController from "sage/controllers/select_controller"
 import DashboardController from "sage/controllers/dashboard_controller"
 import ReverseInfiniteScrollController from "sage/controllers/reverse_infinite_scroll_controller"
 import VariablesController from "sage/controllers/variables_controller"
-import QueryToggleController from "sage/controllers/query_toggle_controller.js"
+import QueryToggleController from "sage/controllers/query_toggle_controller"
 
 // Export all Sage controllers for manual registration
 export { SearchController, ClipboardController, SelectController, DashboardController, ReverseInfiniteScrollController, VariablesController, QueryToggleController }

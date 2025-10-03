@@ -53,6 +53,14 @@ After installation, run the migrations:
 $ rails db:migrate
 ```
 
+### Sprockets
+
+If using sprockets, add this line to your app/javascript/application.js file:
+```js
+import "sage/application";
+```
+
+
 ## LLM Configuration
 
 Sage supports both Anthropic Claude and OpenAI models for SQL generation. Configure your preferred AI service in `config/initializers/sage.rb`:
