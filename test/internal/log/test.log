@@ -22,3 +22,11 @@ SageTest: test_it_has_a_version_number
 SageTest: test_it_has_a_version_number
 --------------------------------------
 [dotenv] Saved a snapshot of [32mENV[0m
+[dotenv] Set [36mANTHROPIC_API_KEY[0m
+[dotenv] Loaded [33m.env[0m
+[dotenv] Loaded [33m.env[0m
+[dotenv] Loaded [33m.env[0m
+--------------------------------------
+SageTest: test_it_has_a_version_number
+--------------------------------------
+[dotenv] Saved a snapshot of [32mENV[0m
