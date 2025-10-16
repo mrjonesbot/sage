@@ -33,7 +33,7 @@
   <% else %>
     <% unless @only_chart %>
       <%= render partial: "caching" %>
-      <p class="text-muted" style="margin-bottom: 10px;">
+      <p class="text-muted" style="margin-top: <%= @rows.any? ? '0' : '40px' %>; margin-bottom: 10px;">
       <% if @row_limit && @rows.size > @row_limit %>
         First
         <% @rows = @rows.first(@row_limit) %>
@@ -225,8 +225,8 @@
         <% end %>
       </div>
     <% end %>
-  <% elsif @only_chart %>
-    <p class="text-muted">No rows</p>
+    <% elsif @only_chart %>
+      <p class="text-muted">No rows</p>
+    <% end %>
   <% end %>
-<% end %>
 <% end %>

@@ -10,36 +10,38 @@
 
 <% @variable_params = @query.persisted? ? variable_params(@query) : nested_variable_params(@query) %>
 
-<%= form_for @query, url: (@query.persisted? ? query_path(@query, params: @variable_params) : queries_path(params: @variable_params)), html: {autocomplete: "off", class: ""} do |f| %>
+<!-- Hidden Run button form outside the main form -->
+<%= form_with url: (defined?(sage) && sage.respond_to?(:run_queries_path) ? sage.run_queries_path : run_queries_path), method: :post, local: false, html: {id: 'run-query-form', style: "display: none;"} do |f| %>
+  <%= f.hidden_field :statement, id: 'run_query_statement' %>
+  <%= f.hidden_field :query_id, value: @query.id %>
+  <%= f.hidden_field :data_source, value: @query.data_source || Blazer.data_sources.keys.first %>
+<% end %>
+
+<%= form_for @query, url: (@query.persisted? ? query_path(@query, params: @variable_params) : queries_path(params: @variable_params)), html: {autocomplete: "off", class: "", id: 'query-form'} do |f| %>
   <div class="grid" style='margin-top: 0px'>
     <div class="s10">
       <div class="field label border">
         <%= f.text_field :name %>
         <%= f.label :name, class: (@query.name.present? ? "active" : "") %>
       </div>
-      
+
       <div class="field textarea label border">
         <%= f.text_area :description, style: "height: 145px; resize: vertical;" %>
         <%= f.label :description, "Description (Optional)", class: (@query.description.present? ? "active" : "") %>
       </div>
-      
+
       <%= f.hidden_field :statement, id: 'query_statement_form' %>
     </div>
-    
+
     <div class="s2">
       <nav style="display: flex; flex-direction: column; gap: 12px; padding-left: 8px;">
         <button type='button' onclick="formatSQL()" class="button secondary" title="Format SQL">
           <i>auto_fix_high</i>
         </button>
-        
-        <%= form_with url: (defined?(sage) && sage.respond_to?(:run_queries_path) ? sage.run_queries_path : run_queries_path), method: :post, local: false, style: "margin: 0;" do |f| %>
-          <%= f.hidden_field :statement, id: 'run_query_statement' %>
-          <%= f.hidden_field :query_id, value: @query.id %>
-          <%= f.hidden_field :data_source, value: @query.data_source || Blazer.data_sources.keys.first %>
-          <button type='submit' class="button primary" title="Run Query">
-            <i>play_arrow</i>
-          </button>
-        <% end %>
+
+        <button type='button' onclick="document.getElementById('run-query-form').requestSubmit()" class="button primary" title="Run Query">
+          <i>play_arrow</i>
+        </button>
 
         <button type="submit" name="commit" value="<%= @query.persisted? ? "Update" : "Create" %>" class="button primary" title="<%= @query.persisted? ? "Update" : "Create" %>">
           <i><%= @query.persisted? ? "save" : "add" %></i>

@@ -35,14 +35,25 @@
     <span>Statement</span>
     <i class="material-icons" data-sage--query-toggle-target="icon" data-action="click->sage--query-toggle#toggle" style="cursor: pointer; font-size: 18px; opacity: 0.6;">visibility_off</i>
   </div>
-  
-  <pre id="code" data-sage--query-toggle-target="content"><code><%= @statement.try(:display_statement) || @query.statement %></code></pre>
+
+  <% statement_display = begin
+       @statement.try(:display_statement) if @statement&.statement.present?
+     rescue => e
+       Rails.logger.error("Error displaying statement: #{e.message}")
+       nil
+     end %>
+
+  <pre id="code" data-sage--query-toggle-target="content"><code><%= statement_display || @query.statement || "-- No SQL statement defined --" %></code></pre>
 </div>
 
-<% if @success %>
+<% if @success && @query.statement.present? && @query.data_source.present? %>
   <%= turbo_frame_tag dom_id(@query, 'results'), src: run_query_path(@query.id, from_show: true, variables: variable_params(@query)) do  %>
     loading...
   <% end %>
+<% elsif @query.statement.blank? %>
+  <div class="padding center-align">
+    <p class="secondary-text">No SQL statement to execute. <%= link_to "Edit this query", edit_query_path(@query) %> to add a statement.</p>
+  </div>
 <% end %>
 
 <%= javascript_tag nonce: true do %>

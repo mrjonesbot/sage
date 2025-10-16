@@ -140,8 +140,9 @@ module Sage
       @query ||= Blazer::Query.find_by(id: params[:query_id]) if params[:query_id]
 
       # use query data source when present
-      data_source = @query.data_source if @query && @query.data_source
+      data_source = @query.data_source if @query && @query.data_source.present?
       data_source ||= params[:data_source]
+      data_source ||= "main" # Fallback to main data source
       @data_source = Blazer.data_sources[data_source]
 
       # Prefer params statement over query's saved statement (for live editing)
