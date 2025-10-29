@@ -198,6 +198,12 @@
     text-overflow: ellipsis;
     margin-bottom: 10px;
   }
+
+  /* ACE Editor cursor styling - sharp vertical line */
+  .ace_cursor {
+    border-left: 2px solid !important;
+    border-radius: 0 !important;
+  }
 </style>
 
 <script>
@@ -251,11 +257,15 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', function() {
+  let tabsInitialized = false;
+
+  function setupTabSwitching() {
     const promptTab = document.getElementById('prompt-tab');
     const sqlTab = document.getElementById('sql-tab');
     const promptPage = document.getElementById('prompt-page');
     const sqlPage = document.getElementById('sql-page');
+
+    if (!promptTab || !sqlTab || !promptPage || !sqlPage) return;
 
     function switchToPromptMode() {
       promptTab.classList.add('active');
@@ -269,32 +279,29 @@
       promptTab.classList.remove('active');
       sqlPage.classList.add('active');
       promptPage.classList.remove('active');
-    }
 
-    promptTab.addEventListener('click', switchToPromptMode);
-    sqlTab.addEventListener('click', switchToSqlMode);
-
-    // If we have fork parameters, automatically switch to SQL mode
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('fork_query_id') || urlParams.get('name')) {
-      console.log('Fork detected, switching to SQL mode');
-      switchToSqlMode();
-      // Initialize ACE editor immediately for forks
-      setTimeout(() => {
-        console.log('Initializing ACE editor for fork');
-        initializeAceEditor();
-      }, 200);
-    }
-  });
-
-  // Initialize ACE editor when SQL tab is clicked
-  document.addEventListener('click', function(e) {
-    if (e.target.id === 'sql-tab') {
+      // Initialize ACE editor when switching to SQL mode
       setTimeout(() => {
         initializeAceEditor();
       }, 100);
     }
-  });
+
+    // Only attach listeners once
+    if (!tabsInitialized) {
+      promptTab.addEventListener('click', switchToPromptMode);
+      sqlTab.addEventListener('click', switchToSqlMode);
+      tabsInitialized = true;
+    }
+
+    // If we have fork parameters, automatically switch to SQL mode
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('fork_query_id') || urlParams.get('name')) {
+      switchToSqlMode();
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', setupTabSwitching);
+  document.addEventListener('turbo:load', setupTabSwitching);
 
   // Ensure form submission captures the editor value
   document.addEventListener('submit', function(e) {
@@ -302,30 +309,6 @@
       const statementField = document.getElementById('sql_statement_field');
       if (statementField) {
         statementField.value = sqlEditor.getValue();
-      }
-    }
-  });
-
-  // Handle Turbo navigation for fork detection
-  document.addEventListener('turbo:load', function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('fork_query_id') || urlParams.get('name')) {
-      console.log('Fork detected via turbo:load, switching to SQL mode');
-      const promptTab = document.getElementById('prompt-tab');
-      const sqlTab = document.getElementById('sql-tab');
-      const promptPage = document.getElementById('prompt-page');
-      const sqlPage = document.getElementById('sql-page');
-      
-      if (sqlTab && promptTab && sqlPage && promptPage) {
-        sqlTab.classList.add('active');
-        promptTab.classList.remove('active');
-        sqlPage.classList.add('active');
-        promptPage.classList.remove('active');
-        
-        setTimeout(() => {
-          console.log('Initializing ACE editor for fork via turbo:load');
-          initializeAceEditor();
-        }, 200);
       }
     }
   });
