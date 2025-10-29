@@ -47,7 +47,7 @@
     <%= f.hidden_field :query_id, value: query.id %>
     <%= f.hidden_field :data_source, value: query.data_source || Blazer.data_sources.keys.first %>
     <div id="editor-container" style="position: relative;">
-      <div id="editor" style="height: 225px;" data-initial-content="<%= local_assigns[:statement] || query.statement %>"></div>
+      <div id="editor" style="height: 225px;" data-initial-content="<%= local_assigns[:statement] || query.statement %>"><%= local_assigns[:statement] || query.statement %></div>
     </div>
   <% end %>
 </div>
@@ -223,8 +223,16 @@
 
   // Set initial value from data attribute or current content
   const editorDiv = document.getElementById("editor")
-  const initialContent = editorDiv.getAttribute("data-initial-content") || editor.getValue()
-  
+  let initialContent = editorDiv.getAttribute("data-initial-content") || editor.getValue()
+
+  // Decode HTML entities that ERB escapes in the attribute
+  // This handles &quot;, &#39;, &#10; (newlines), etc.
+  if (initialContent && editorDiv.hasAttribute("data-initial-content")) {
+    const textarea = document.createElement('textarea');
+    textarea.innerHTML = initialContent;
+    initialContent = textarea.value;
+  }
+
   if (initialContent && initialContent !== editor.getValue()) {
     editor.setValue(initialContent, -1) // -1 moves cursor to start
   }
