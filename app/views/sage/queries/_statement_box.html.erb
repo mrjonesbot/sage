@@ -47,7 +47,7 @@
     <%= f.hidden_field :query_id, value: query.id %>
     <%= f.hidden_field :data_source, value: query.data_source || Blazer.data_sources.keys.first %>
     <div id="editor-container" style="position: relative;">
-      <div id="editor" style="height: 225px;" data-initial-content="<%= html_escape(local_assigns[:statement] || query.statement) %>"><%= local_assigns[:statement] || query.statement %></div>
+      <div id="editor" style="height: 225px;" data-initial-content="<%= local_assigns[:statement] || query.statement %>"><%= local_assigns[:statement] || query.statement %></div>
     </div>
   <% end %>
 </div>
