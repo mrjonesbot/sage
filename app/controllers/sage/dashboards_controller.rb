@@ -16,8 +16,12 @@ module Sage
         @dashboards = @dashboards.where(creator_id: blazer_user.id).reorder(updated_at: :desc)
       end
 
-      # Apply pagination with Pagy
-      @pagy, @dashboards = pagy(@dashboards)
+      # Apply pagination with Pagy (support both 9.x and 43.x)
+      @pagy, @dashboards = if defined?(Pagy::Backend)
+        pagy(@dashboards) # Pagy 9.x
+      else
+        pagy(:offset, @dashboards) # Pagy 43.x
+      end
     end
 
     def new

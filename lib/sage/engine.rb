@@ -51,9 +51,14 @@ module Sage
       end
     end
 
+    # Support both Pagy 9.x (Frontend) and Pagy 43.x (instance methods)
     initializer "sage.pagy_helpers" do
       ActiveSupport.on_load(:action_view) do
-        include Pagy::Frontend if defined?(Pagy::Frontend)
+        if defined?(Pagy::Frontend)
+          # Pagy 9.x uses Frontend module
+          include Pagy::Frontend
+        end
+        # Pagy 43.x uses instance methods on @pagy objects, no module needed
       end
     end
 

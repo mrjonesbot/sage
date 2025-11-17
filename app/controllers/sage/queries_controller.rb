@@ -23,8 +23,12 @@ module Sage
       # Filter out private queries (starting with #) unless they belong to the current user
       @queries = @queries.where("name NOT LIKE ? OR creator_id = ?", "#%", blazer_user.try(:id))
 
-      # Apply pagination with Pagy
-      @pagy, @queries = pagy(@queries)
+      # Apply pagination with Pagy (support both 9.x and 43.x)
+      @pagy, @queries = if defined?(Pagy::Backend)
+        pagy(@queries) # Pagy 9.x
+      else
+        pagy(:offset, @queries) # Pagy 43.x
+      end
     end
 
     def new

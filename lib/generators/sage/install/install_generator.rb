@@ -50,8 +50,16 @@ module Sage
       def create_migrations
         say "Creating Sage database migrations...", :green
 
-        # Generate timestamp for migration
-        timestamp = Time.now.utc.strftime("%Y%m%d%H%M%S")
+        # Generate unique timestamp for migration by checking existing migrations
+        # and ensuring we don't create a duplicate timestamp
+        existing_timestamps = Dir.glob("db/migrate/*").map do |file|
+          File.basename(file).match(/^(\d+)_/)[1].to_i
+        end.compact
+
+        timestamp = Time.now.utc.strftime("%Y%m%d%H%M%S").to_i
+        while existing_timestamps.include?(timestamp)
+          timestamp += 1
+        end
 
         # Create the migration file
         migration_file = "db/migrate/#{timestamp}_create_sage_messages.rb"
@@ -86,14 +94,13 @@ module Sage
         say "Sage installation complete!", :green
         say "="*50, :green
         say "\nNext steps:"
-        say "1. Run 'bundle install' to install dependencies"
-        say "2. Run 'rails db:migrate' to create Blazer tables"
-        say "3. Configure your AI service in config/initializers/sage.rb"
-        say "4. Visit #{root_url}sage to start using Sage"
+        say "1. Run 'rails db:migrate' to create Blazer tables"
+        say "2. Configure your AI service in config/initializers/sage.rb"
+        say "3. Visit #{root_url}sage to start using Sage"
         say "\nFor AI integration, you'll need to:"
         say "- Set up an Anthropic API key (or OpenAI if preferred)"
         say "- Add the API key to Rails credentials or .env file"
-        say "- Configure database schema context for better SQL generation"
+        say "- Leverage model scopes for better SQL inference"
       end
 
       private

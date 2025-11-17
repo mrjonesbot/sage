@@ -1,7 +1,5 @@
 module Sage
   module ApplicationHelper
-    include Pagy::Frontend
-
     # Provide access to Sage engine routes
     def sage
       Sage::Engine.routes.url_helpers
@@ -24,6 +22,17 @@ module Sage
         else
           date.strftime("%B %d, %Y")
         end
+      end
+    end
+
+    # Support both Pagy 9.x and 43.x
+    def pagy_navigation(pagy_object)
+      if defined?(Pagy::Backend)
+        # Pagy 9.x uses pagy_nav helper
+        pagy_nav(pagy_object)
+      else
+        # Pagy 43.x uses instance method
+        pagy_object.series_nav
       end
     end
   end
