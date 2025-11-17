@@ -2,7 +2,6 @@ require "test_helper"
 require "generators/sage/install/install_generator"
 
 class InstallGeneratorTest < ActiveSupport::TestCase
-
   test "pagy initializer works with frozen Pagy::DEFAULT (both 9.x and 43.x)" do
     pagy_initializer_path = File.expand_path("../../config/initializers/pagy.rb", __dir__)
 
@@ -37,5 +36,4 @@ class InstallGeneratorTest < ActiveSupport::TestCase
       Pagy.const_set(:DEFAULT, original_default)
     end
   end
-
 end
