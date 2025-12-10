@@ -48,7 +48,7 @@
       Sage::Engine.routes.url_helpers.run_queries_path
     end
   %>
-  <%= form_with url: form_url, method: :post do |f| %>
+  <%= form_with url: form_url, method: :post, data: { turbo_frame: dom_id(query, 'results') } do |f| %>
     <%= f.hidden_field :statement, id: 'query_statement' %>
     <%= f.hidden_field :query_id, value: query.id %>
     <%= f.hidden_field :data_source, value: query.data_source || Blazer.data_sources.keys.first %>
