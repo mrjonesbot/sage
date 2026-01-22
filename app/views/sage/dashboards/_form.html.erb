@@ -12,9 +12,11 @@
     <div class="s6">
       <fieldset>
         <legend>Add Chart</legend>
-        <div data-controller="sage--select"
-             data-sage--select-options-value="<%= Blazer::Query.active.named.order(:name).select("id, name").map { |q| {text: q.name, value: q.id} }.to_json.html_safe %>"
-             data-sage--select-placeholder-value="Select chart">
+        <%= tag.div data: {
+              controller: "sage--select",
+              "sage--select-options-value": Blazer::Query.active.named.order(:name).select("id, name").map { |q| {text: q.name, value: q.id} },
+              "sage--select-placeholder-value": "Select chart"
+            } do %>
           <div class="field label border select-container">
             <input type="text" 
                    data-sage--select-target="input" 
@@ -25,7 +27,7 @@
             <div data-sage--select-target="dropdown" class="select-dropdown hidden">
             </div>
           </div>
-        </div>
+        <% end %>
       </fieldset>
 
       <p style="padding-bottom: 140px;">

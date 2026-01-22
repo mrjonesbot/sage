@@ -9,10 +9,12 @@
 
   <div class="grid">
     <div class="s12 m6">
-      <div data-controller="sage--select" 
-           data-sage--select-options-value="<%= Blazer::Query.active.named.order(:name).select("id, name").map { |q| {text: q.name, value: q.id} }.to_json %>"
-           data-sage--select-selected-value="<%= @check.query_id %>"
-           data-sage--select-placeholder-value="Select query">
+      <%= tag.div data: {
+            controller: "sage--select",
+            "sage--select-options-value": Blazer::Query.active.named.order(:name).select("id, name").map { |q| {text: q.name, value: q.id} },
+            "sage--select-selected-value": @check.query_id,
+            "sage--select-placeholder-value": "Select query"
+          } do %>
         <div class="field label border select-container">
           <input type="text" 
                  data-sage--select-target="input" 
@@ -24,7 +26,7 @@
           <div data-sage--select-target="dropdown" class="select-dropdown hidden">
           </div>
         </div>
-      </div>
+      <% end %>
 
       <% if @check.respond_to?(:check_type) %>
         <div class="field label border">

@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    sage-rails (0.2.0)
+    sage-rails (0.2.3)
       activerecord
       blazer
       importmap-rails
