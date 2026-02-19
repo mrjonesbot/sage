@@ -24,4 +24,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency "pagy"
   spec.add_dependency "ruby_llm"
   spec.add_dependency "ruby_llm-schema"
+  spec.add_dependency "dotenv", "~> 3.1"
 end

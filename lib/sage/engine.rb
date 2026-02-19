@@ -99,15 +99,8 @@ module Sage
             api_key = Rails.application.credentials.dig(:anthropic, :api_key)
           end
 
-          # Try .env file
-          if api_key.nil? && defined?(Rails.root)
-            env_path = Rails.root.join(".env")
-            if File.exist?(env_path)
-              require "dotenv"
-              env_vars = Dotenv.parse(env_path)
-              api_key = env_vars["ANTHROPIC_API_KEY"]
-            end
-          end
+          # Try environment variable
+          api_key ||= ENV["ANTHROPIC_API_KEY"]
 
           config.anthropic_api_key = api_key
 
@@ -130,15 +123,8 @@ module Sage
             api_key = Rails.application.credentials.dig(:openai, :api_key)
           end
 
-          # Try .env file
-          if api_key.nil? && defined?(Rails.root)
-            env_path = Rails.root.join(".env")
-            if File.exist?(env_path)
-              require "dotenv"
-              env_vars = Dotenv.parse(env_path)
-              api_key = env_vars["OPENAI_API_KEY"]
-            end
-          end
+          # Try environment variable
+          api_key ||= ENV["OPENAI_API_KEY"]
 
           config.openai_api_key = api_key
         end
@@ -153,6 +139,12 @@ module Sage
       end
 
       if app.config.respond_to?(:assets)
+        # Ensure Blazer's asset paths are available so individual files can be resolved
+        if defined?(Blazer::Engine)
+          app.config.assets.paths << Blazer::Engine.root.join("app/assets/javascripts")
+          app.config.assets.paths << Blazer::Engine.root.join("app/assets/stylesheets")
+        end
+
         # Blazer assets
         blazer_css_assets = [
           "blazer/selectize.css",
