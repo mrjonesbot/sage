@@ -153,7 +153,7 @@ module Sage
 
         blazer_js_assets = [
           "blazer/jquery.js",
-          "blazer/rails-ujs.js",
+          "blazer/jquery-ujs.js",
           "blazer/stupidtable.js",
           "blazer/stupidtable-custom-settings.js",
           "blazer/jquery.stickytableheaders.js",
