@@ -421,6 +421,7 @@ module Sage
 
     def set_query
       @query = Blazer::Query.find_by(id: params[:id].to_s.split("-").first) if params[:id]
+      redirect_to queries_path, alert: "Query not found." unless @query
     end
 
     def render_forbidden
