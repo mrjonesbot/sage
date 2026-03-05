@@ -1,6 +1,6 @@
 module Sage
   class QueriesController < BaseController
-    before_action :set_query, only: [ :show, :edit, :update, :destroy, :refresh, :run ]
+    before_action :set_query, only: [ :show, :edit, :update, :destroy, :refresh ]
     before_action :set_data_source, only: [ :tables, :docs, :schema, :cancel ]
 
     def index
@@ -139,8 +139,7 @@ module Sage
     end
 
     def run
-      # @query is set by before_action for member routes (GET /queries/:id/run)
-      # For collection routes (POST /queries/run), load query if query_id is provided
+      @query = Blazer::Query.find_by(id: params[:id].to_s.split("-").first) if params[:id]
       @query ||= Blazer::Query.find_by(id: params[:query_id]) if params[:query_id]
 
       # use query data source when present
