@@ -51,21 +51,21 @@ module Sage
         locals: { query: query, statement: sql, form_url: run_queries_path }
       )
 
-      # Auto-submit the form after the statement_box renders
+      # Auto-submit the run form after the statement_box renders.
+      # Uses the run-query-form (rendered on page load with a valid CSRF token)
+      # and requestSubmit() so Turbo intercepts it as a frame request.
       Turbo::StreamsChannel.broadcast_append_to(
         "statements",
         target: "body",
         html: "<script>
           setTimeout(() => {
-            // Wait for ACE editor to be fully initialized
             const checkAndSubmit = () => {
-              const form = document.querySelector('##{dom_id(query, "statement-box")} form');
-              const hiddenField = document.querySelector('#query_statement');
+              const runForm = document.getElementById('run-query-form');
+              const hiddenField = document.getElementById('run_query_statement');
 
-              if (form && hiddenField && hiddenField.value && window.aceEditor) {
-                form.submit();
+              if (runForm && hiddenField && hiddenField.value && window.aceEditor) {
+                runForm.requestSubmit();
               } else {
-                // Retry after another 100ms if not ready
                 setTimeout(checkAndSubmit, 100);
               }
             };

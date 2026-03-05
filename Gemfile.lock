@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    sage-rails (0.2.5)
+    sage-rails (0.2.6)
       activerecord
       blazer
       dotenv (~> 3.1)

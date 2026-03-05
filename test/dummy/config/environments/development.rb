@@ -32,13 +32,13 @@ Rails.application.configure do
   # config.active_storage.service = :local
 
   # Don't care if the mailer can't send.
-  # config.action_mailer.raise_delivery_errors = false
+  config.action_mailer.raise_delivery_errors = false
 
   # Make template changes take effect immediately.
   # config.action_mailer.perform_caching = false
 
   # Set localhost to be used by links generated in mailer templates.
-  # config.action_mailer.default_url_options = { host: "localhost", port: 3000 }
+  config.action_mailer.default_url_options = { host: "localhost", port: 3000 }
 
   # Use test delivery method to avoid trying to send real emails
   # config.action_mailer.delivery_method = :test
